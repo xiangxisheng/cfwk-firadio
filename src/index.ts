@@ -1,18 +1,17 @@
-/**
- * Welcome to Cloudflare Workers! This is your first worker.
- *
- * - Run `npm run dev` in your terminal to start a development server
- * - Open a browser tab at http://localhost:8787/ to see your worker in action
- * - Run `npm run deploy` to publish your worker
- *
- * Bind resources to your worker in `wrangler.toml`. After adding bindings, a type definition for the
- * `Env` object can be regenerated with `npm run cf-typegen`.
- *
- * Learn more at https://developers.cloudflare.com/workers/
- */
+import routes from './routes';
+import { Env } from './utils/interface';
+import email from './email';
 
 export default {
-	async fetch(request, env, ctx): Promise<Response> {
-		return new Response('Hello World!');
+	async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+		try {
+			return await routes.fetch(request, env, ctx);
+		} catch (e) {
+			console.error(e);
+			return new Response("网站维护中，请稍后再试", { status: 500 });
+		}
 	},
-} satisfies ExportedHandler<Env>;
+	async email(message: ForwardableEmailMessage, env: Env, ctx: ExecutionContext): Promise<void> {
+		return await email(message, env, ctx);
+	}
+};

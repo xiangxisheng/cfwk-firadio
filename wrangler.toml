@@ -107,3 +107,7 @@ node_compat = true
 # [[vectorize]]
 # binding = "MY_INDEX"
 # index_name = "my-index"
+[[d1_databases]]
+binding = "DB" # i.e. available in your Worker on env.DB
+database_name = "cfd1-firadio-wnam"
+database_id = "0143113c-de9d-4ea1-92a9-19d27af8e450"
