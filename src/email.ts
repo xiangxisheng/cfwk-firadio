@@ -111,7 +111,7 @@ export default async (message: ForwardableEmailMessage, env: Env, ctx: Execution
 	const domain_from = extractDomain(message.from);
 	// 创建mMsgData，用于存到数据库
 	const mMsgData = new Map<string, null | string | number>();
-	mMsgData.set('id', new Date().getTime() + Math.random()); // 主键（REAL）
+	mMsgData.set('created', new Date().getTime()); // 收件日期（REAL）
 	mMsgData.set('domain_from', domain_from);
 	mMsgData.set('domain_to', extractDomain(message.to));
 	mMsgData.set('email_from', message.from) // 发件人

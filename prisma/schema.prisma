@@ -1,0 +1,22 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model mails {
+  id          Int     @id @default(autoincrement())
+  created     Int
+  domain_from String
+  domain_to   String
+  email_from  String
+  email_to    String
+  headers     String
+  subject     String
+  body_text   String?
+  body_html   String?
+}

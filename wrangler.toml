@@ -110,4 +110,4 @@ node_compat = true
 [[d1_databases]]
 binding = "DB" # i.e. available in your Worker on env.DB
 database_name = "cfd1-firadio-wnam"
-database_id = "0143113c-de9d-4ea1-92a9-19d27af8e450"
+database_id = "6876c3ba-19a1-4160-9f01-e314af033254"
