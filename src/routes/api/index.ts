@@ -23,7 +23,7 @@ app.use('*', (c: any, next) => {
 	return next();
 });
 
-app.route('/mail', require('./api/mail').default);
+app.route('/console', require('./console').default);
 
 app.get('/', (c) => {
 	return c.text('当前是API接口的首页');

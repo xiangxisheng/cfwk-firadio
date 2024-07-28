@@ -1,0 +1,10 @@
+{
+	"editor.lineHeight": 13, // 行高，比字体大一个像素就够了
+	"editor.fontSize": 12, // 字体大小，填12刚好清晰
+	"editor.fontFamily": "宋体", // 字体推荐宋体
+	"editor.tabSize": 1, // 缩进宽度，宋体填1就足够了
+	"editor.renderWhitespace": "all", // 用于区分Tab还是Space
+	"editor.detectIndentation": false, //解决缩进失效
+	"editor.insertSpaces": false, // true表示用空格代替缩进
+	"editor.formatOnSave": true, // 保存时自动缩进
+}
