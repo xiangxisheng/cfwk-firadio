@@ -10,5 +10,5 @@
 	"editor.insertSpaces": false, // true表示用空格代替缩进
 	"editor.formatOnSave": true, // 保存时自动缩进
 	"editor.mouseWheelZoom": false, // 不允许鼠标滚轮调节大小
-	"workbench.colorTheme": "Default Dark+", // 使用默认的暗黑主题
+	"workbench.colorTheme": "Default Dark Modern", // 使用默认的暗黑主题
 }

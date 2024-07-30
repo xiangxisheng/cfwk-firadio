@@ -1,7 +1,4 @@
 import { Hono } from 'hono';
-import { Env } from './interface';
-import { PrismaClient } from '@prisma/client'
-import { PrismaD1 } from '@prisma/adapter-d1'
 
 const app = new Hono<{ Bindings: Env }>();
 

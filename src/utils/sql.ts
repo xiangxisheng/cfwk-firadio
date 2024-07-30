@@ -1,72 +1,109 @@
-export default () => {
+interface SqlParam {
+	aSelect: Array<string>,
+	sFrom: null | String,
+	aWhere: null | Array<[string, any]>,
+	aOrderBy: null | Array<string>,
+	isLock: Boolean,
+	iLimit: null | Number,
+	iOffset: null | Number,
+	sBuildSql: null | String,
+	aBuildParam: null | Array<any>,
+}
+
+export function SQL() {
 	//取得sql实例
-	const mData = {
-		sField: '*',
-		sTableName: '',
-		mWhere: new Map<string, string>(),
-		sWhere: '',
+	const mData: SqlParam = {
+		aSelect: new Array('*'),
+		sFrom: null,
+		aWhere: null,
+		aOrderBy: null,
 		isLock: false,
-		limit: 0,
+		iLimit: null,
+		iOffset: null,
+		sBuildSql: null,
+		aBuildParam: null,
 	};
 	const oSql = {
-		table(sTableName: string) {
-			mData.sTableName = sTableName;
+		from(sFrom: string) {
+			mData.sFrom = sFrom;
 			return oSql;
 		},
-		field(sField: string) {
-			mData.sField = sField;
+		select(aSelect: string[]) {
+			mData.aSelect = aSelect;
 			return oSql;
 		},
-		where(mWhere: Map<string, string>, sWhere: string) {
-			mData.mWhere = mWhere;
-			if (sWhere) {
-				mData.sWhere = sWhere;
-			} else {
-				// 如果没有提供sWhere就需要自动生成
-				const aWhere = [];
-				for (const k in mWhere) {
-					aWhere.push(`${k}=:${k}`);
-				}
-				if (aWhere.length > 0) {
-					mData.sWhere = '(' + aWhere.join(')AND(') + ')';
-				}
-			}
+		where(aWhere: Array<[string, any]>) {
+			mData.aWhere = aWhere;
+			return oSql;
+		},
+		orderBy(aOrderBy: string[]) {
+			mData.aOrderBy = aOrderBy;
+			return oSql;
+		},
+		limit(iLimit: number) {
+			mData.iLimit = iLimit;
+			return oSql;
+		},
+		offset(iOffset: number) {
+			mData.iOffset = iOffset;
 			return oSql;
 		},
 		lock() {
 			mData.isLock = true;
 			return oSql;
 		},
-
-		select() {
+		buildSelect() {
+			// 构建[SELECT]查询语句
+			mData.aBuildParam = new Array<any>();
 			const aSql = [];
-			aSql.push(`SELECT ${mData.sField} FROM ${mData.sTableName}`);
-			if (mData.sWhere) {
-				aSql.push(`WHERE ${mData.sWhere}`);
+			aSql.push(`SELECT ${mData.aSelect.join(',')}`);
+			if (mData.sFrom === null) {
+				throw new Error('未指定FROM表名');
 			}
-			if (mData.limit) {
-				aSql.push(`LIMIT ${mData.limit}`);
+			aSql.push(`FROM ${mData.sFrom}`);
+			if (mData.aWhere !== null) {
+				const aWhereSql = new Array<string>();
+				for (const aWhereOne of mData.aWhere) {
+					aWhereSql.push(aWhereOne[0]);
+					mData.aBuildParam.push(aWhereOne[1]);
+				}
+				if (aWhereSql.length > 0) {
+					aSql.push(`WHERE (${aWhereSql.join(')AND(')})`);
+				}
+			}
+			if (mData.aOrderBy !== null) {
+				aSql.push(`ORDER BY ${mData.aOrderBy.join(',')}`);
+			}
+			if (mData.iLimit !== null) {
+				aSql.push(`LIMIT ${mData.iLimit}`);
+			}
+			if (mData.iOffset !== null) {
+				aSql.push(`OFFSET ${mData.iOffset}`);
 			}
 			if (mData.isLock) {
 				aSql.push(`FOR UPDATE`);
 			}
-			const sSql = aSql.join(' ');
-			const values = Object.values(mData.mWhere);
-			return [sSql, values];
+			mData.sBuildSql = aSql.join(' ');
+			return oSql;
 		},
-		async find() {
-			mData.limit = 1;
-			const aRows = await oSql.select();
-			for (const k in aRows) {
-				return aRows[k];
-			}
-		},
-		add(mValue: Map<string, null | string | number>): any[] {
+		buildInsert(mValue: Map<string, null | string | number>) {
+			// 构建[INSERT]SQL语句
 			const columns = Array.from(mValue.keys()).join(', ');
 			const placeholders = Array.from(mValue.keys()).map(() => '?').join(', ');
-			const values = Array.from(mValue.values());
-			const sSql = `INSERT INTO ${mData.sTableName} (${columns}) VALUES (${placeholders})`;
-			return [sSql, values];
+			mData.sBuildSql = `INSERT INTO ${mData.sFrom} (${columns}) VALUES (${placeholders})`;
+			mData.aBuildParam = Array.from(mValue.values());
+			return oSql;
+		},
+		getSQL() {
+			// 获取预编译用到的SQL语句
+			if (!mData.sBuildSql) {
+				throw new Error('[getSQL]前要先[build...]');
+			}
+			return mData.sBuildSql;
+		},
+		getParam() {
+			// 获取绑定参数用到的参数列表
+			return mData.aBuildParam;
 		},
 	};
 	return oSql;

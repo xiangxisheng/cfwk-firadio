@@ -1,34 +1,42 @@
 import { Hono } from 'hono';
-import { Env } from '../../../../utils/interface';
-import { PrismaClient } from '@prisma/client'
-import { PrismaD1 } from '@prisma/adapter-d1'
+import { CFD1 } from '../../../../utils/cfd1';
 
 const app = new Hono<{ Bindings: Env }>();
 
 app.get("/", async (c) => {
-	const prisma = new PrismaClient({ adapter: new PrismaD1(c.env.DB) });
-	const select = {
-		id: true,
-		created: true,
-		email_from: true,
-		email_to: true,
-		subject: true,
-	};
-	const orderBy: any[] = [{ id: 'desc' }];
-	const take = Number(c.req.query('take') || 10);
-	const skip = Number(c.req.query('skip') || 0);
-	const results = await prisma.mails.findMany({ select, orderBy, skip, take });
-	return c.json(results);
+	const oCFD1 = CFD1(c.env.DB);
+	const select: string[] = [
+		'id',
+		'created',
+		'email_from',
+		'email_to',
+		'subject',
+	];
+	const oSql = oCFD1.sql();
+	oSql.select(select);
+	oSql.from('mails');
+	oSql.orderBy(['id DESC']);
+	oSql.offset(Number(c.req.query('offset') || 0));
+	oSql.limit(Number(c.req.query('limit') || 10));
+	oSql.buildSelect();
+	console.log('执行的SQL语句', oCFD1.getSQL(oSql));
+	return c.json((await oCFD1.all(oSql)).results);
 });
 
 app.get("/:id", async (c) => {
-	const prisma = new PrismaClient({ adapter: new PrismaD1(c.env.DB) });
+	const oCFD1 = CFD1(c.env.DB);
 	const id = Number(c.req.param("id"));
 	if (!id) {
 		return c.json({ message: "require[id]" }, 400);
 	}
-	const where: any = { id };
-	const results = await prisma.mails.findFirst({ where });
+	const oSql = oCFD1.sql();
+	oSql.from('mails');
+	const aWhere = new Array<[string, any]>();
+	aWhere.push(['id=?', id]);
+	oSql.where(aWhere);
+	oSql.buildSelect();
+	console.log('执行的SQL语句', oCFD1.getSQL(oSql));
+	const results = await oCFD1.first(oSql);
 	if (!results) {
 		return c.json({ message: `Id(${id}) Not found` }, 404);
 	}

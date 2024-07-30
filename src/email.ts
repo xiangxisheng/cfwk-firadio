@@ -1,5 +1,5 @@
-// 接口定义
-import { Env } from './utils/interface';
+// CF的D1数据库操作类
+import { CFD1 } from './utils/cfd1';
 
 // 合并多个二进制数据
 import { Buffer } from "node:buffer";
@@ -20,7 +20,6 @@ import { EmailMessage } from "cloudflare:email";
 import PostalMime from 'postal-mime';
 
 // 存储邮件时
-import sql from './utils/sql';
 const textNone: string | null = null;
 
 function getHeaders(headers: Headers) {
@@ -139,15 +138,15 @@ export default async (message: ForwardableEmailMessage, env: Env, ctx: Execution
 			mMsgData.set('body_html', parsedMsg.html); // 富文本
 		}
 	} catch (e) {
-		console.error(e);
+		console.error("PostalMime解析失败", e);
 		// 单独存储解析不了的邮件
 		const message_raw = decodeBuffer(await decodeStreamToBuffer(message.raw));
 		// 可以将这个邮件保存到单独的表
 	}
-	const r1 = sql().table('mails').add(mMsgData);
-	console.log('插入数据库表的SQL语句', r1);
-	const stmt = env.DB.prepare(r1[0]);
-	const r2 = await stmt.bind.apply(stmt, r1[1]).all();
+	const oCFD1 = CFD1(env.DB);
+	const oSql = oCFD1.sql().from('mails').buildInsert(mMsgData);
+	console.log('插入数据库表的SQL语句', oCFD1.getSQL(oSql));
+	const r2 = await oCFD1.all(oSql);
 	if (r2.success) {
 		console.log('邮件保存成功');
 	}

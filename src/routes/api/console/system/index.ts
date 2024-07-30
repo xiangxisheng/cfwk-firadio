@@ -1,9 +1,6 @@
 import { Hono } from 'hono';
-import { Env } from '../../../../utils/interface';
-import { PrismaClient } from '@prisma/client'
-import { PrismaD1 } from '@prisma/adapter-d1'
 
-const app = new Hono<{ Bindings: Env }>();
+const app = new Hono();
 
 app.route('/users', require('./users').default);
 

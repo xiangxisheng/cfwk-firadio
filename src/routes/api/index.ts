@@ -3,7 +3,7 @@ import { Hono } from 'hono';
 const app = new Hono();
 
 // 跨域中间件
-app.use('*', (c: any, next) => {
+app.use('*', async (c: any, next) => {
 	const origin = c.req.header('Origin');
 	if (origin) {
 		c.res.headers.set('Access-Control-Allow-Origin', origin);
@@ -20,7 +20,7 @@ app.use('*', (c: any, next) => {
 	if (c.req.method === 'OPTIONS') {
 		return c.text(null, 204);
 	}
-	return next();
+	return await next();
 });
 
 app.route('/console', require('./console').default);

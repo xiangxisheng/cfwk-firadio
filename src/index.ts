@@ -1,5 +1,4 @@
 import routes from './routes';
-import { Env } from './utils/interface';
 import email from './email';
 
 export default {
@@ -7,7 +6,7 @@ export default {
 		try {
 			return await routes.fetch(request, env, ctx);
 		} catch (e) {
-			console.error(e);
+			console.error("fetch函数调用异常", e);
 			return new Response("网站维护中，请稍后再试", { status: 500 });
 		}
 	},
