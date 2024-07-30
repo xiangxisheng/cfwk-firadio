@@ -6,3 +6,4 @@ prisma/dev.db-journal
 prisma/migrations
 ~*
 *~
+wrangler.toml

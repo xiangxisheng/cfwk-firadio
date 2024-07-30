@@ -109,5 +109,5 @@ node_compat = true
 # index_name = "my-index"
 [[d1_databases]]
 binding = "DB" # i.e. available in your Worker on env.DB
-database_name = "cfd1-firadio-wnam"
-database_id = "6876c3ba-19a1-4160-9f01-e314af033254"
+database_name = "cfd1-wnam"
+database_id = "ee051600-22ca-44b7-a270-db5db231168a"
