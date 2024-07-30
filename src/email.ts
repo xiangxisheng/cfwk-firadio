@@ -5,7 +5,15 @@ import { Env } from './utils/interface';
 import { Buffer } from "node:buffer";
 
 // 邮件回复功能中需要创建邮件
-import { createMimeMessage } from "mimetext";
+//import { createMimeMessage } from "mimetext";
+function createMimeMessage() {
+	try {
+		const a = 'mimetext';
+		return require(a).createMimeMessage;
+	} catch (e) {
+		return null;
+	}
+}
 import { EmailMessage } from "cloudflare:email";
 
 // 解析收到的邮件
@@ -88,6 +96,9 @@ function extractDomain(email: string) {
 function getReplyMessage(MessageID: string, email_from: string, email_to: string, replyName: string, replySubject: string, replyText: string) {
 	// 邮件回复功能
 	const msg = createMimeMessage();
+	if (!msg) {
+		return null;
+	}
 	msg.setHeader("In-Reply-To", MessageID);
 	msg.setSender({ name: replyName, addr: email_to });
 	msg.setRecipient(email_from);
@@ -156,6 +167,10 @@ export default async (message: ForwardableEmailMessage, env: Env, ctx: Execution
 		return;
 	}
 	const replyMessage = getReplyMessage(MessageID, message.from, message.to, "Thank you for your contact", "Email Routing Auto-reply（邮件自动回复）", "We got your message\r\n我们已经收到您的邮件");
+	if (!replyMessage) {
+		console.log('邮件回复功能未启用');
+		return;
+	}
 	await message.reply(replyMessage);
 	console.log('邮件回复成功');
 };
