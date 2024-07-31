@@ -8,6 +8,9 @@ export function CFD1(DB: D1Database) {
 		getSQL(oSql: any) {
 			return oSql.getSQL();
 		},
+		getParam(oSql: any) {
+			return oSql.getParam();
+		},
 		getStmt(oSql: any) {
 			return DB.prepare(oSql.getSQL());
 		},

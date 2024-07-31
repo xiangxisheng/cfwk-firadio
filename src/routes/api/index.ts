@@ -1,6 +1,20 @@
 import { Hono } from 'hono';
+import { ResponseResultData, ResponseMessage } from '../../utils/interface';
 
 const app = new Hono();
+
+app.onError((err, c) => {
+	if (err instanceof ResponseResultData) {
+		console.log('app[/api].onError:', err.resultData);
+		return c.json(err.resultData);
+	}
+	if (err instanceof ResponseMessage) {
+		console.log('app[/api].onError:', err.resultData);
+		return c.json(err.resultData);
+	}
+	console.error(`app[/api].onError: ${err.message}`);
+	return c.json({ message: { type: "error", content: err.message } });
+});
 
 // 跨域中间件
 app.use('*', async (c: any, next) => {

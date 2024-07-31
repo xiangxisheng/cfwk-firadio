@@ -12,3 +12,15 @@ CREATE TABLE "mails" (
     "body_text" TEXT,
     "body_html" TEXT
 );
+
+-- CreateTable
+CREATE TABLE "users" (
+    "user_id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "created" INTEGER NOT NULL,
+    "email" TEXT NOT NULL,
+    "password" TEXT NOT NULL,
+    "roles" TEXT NOT NULL
+);
+
+-- CreateIndex
+CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
