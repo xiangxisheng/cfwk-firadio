@@ -38,6 +38,7 @@ app.use('*', async (c: any, next) => {
 });
 
 app.route('/console', require('./console').default);
+app.route('/bkatm', require('./bkatm').default);
 
 app.get('/', (c) => {
 	return c.text('当前是API接口的首页');
