@@ -1,13 +1,8 @@
-import { Hono, Context } from 'hono';
+import { Route } from '@/utils/route';
 import { BatchButton, TableColumn, Table, TablePagination, ResultData, ResponseResultData, ResponseMessage } from '@/utils/interface';
 import { CFD1 } from '@/utils/cfd1';
 
-// 定义一个接口来扩展Context
-interface CustomContext extends Context {
-	Bindings: Env,
-	test: (data: any, status?: number) => Response;
-}
-const app = new Hono<CustomContext>();
+const app = Route();
 
 const buttons: BatchButton[] = [
 	{

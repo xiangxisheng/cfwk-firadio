@@ -1,7 +1,7 @@
-import { Hono } from 'hono';
+import { Route } from '@/utils/route';
 import { CFD1 } from '@/utils/cfd1';
 
-const app = new Hono<{ Bindings: Env }>();
+const app = Route();
 
 app.get("/", async (c) => {
 	const oCFD1 = CFD1(c.env.DB);

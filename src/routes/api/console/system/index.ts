@@ -1,6 +1,6 @@
-import { Hono } from 'hono';
+import { Route } from '@/utils/route';
 
-const app = new Hono();
+const app = Route();
 
 app.route('/users', require('./users').default);
 

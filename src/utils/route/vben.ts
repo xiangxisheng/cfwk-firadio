@@ -1,6 +1,6 @@
-import { Hono } from 'hono';
+import { Route } from '@/utils/route';
 
-const app = new Hono<{ Bindings: Env }>();
+const app = Route();
 
 app.get("/", async (c) => {
 	const __CONF__ = {

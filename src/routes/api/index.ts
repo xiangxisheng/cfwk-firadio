@@ -1,7 +1,7 @@
-import { Hono } from 'hono';
+import { Route } from '@/utils/route';
 import { ResponseResultData, ResponseMessage } from '@/utils/interface';
 
-const app = new Hono();
+const app = Route();
 
 app.onError((err, c) => {
 	if (err instanceof ResponseResultData) {
