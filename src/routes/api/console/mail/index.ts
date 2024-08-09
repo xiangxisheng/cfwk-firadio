@@ -5,13 +5,13 @@ const app = new Hono<{ Bindings: Env }>();
 
 app.get("/", async (c) => {
 	const oCFD1 = CFD1(c.env.DB);
-	const select: string[] = [
-		'id',
-		'created',
-		'email_from',
-		'email_to',
-		'subject',
-	];
+	const select = {
+		'id': 'id',
+		'created': 'created',
+		'email_from': 'email_from',
+		'email_to': 'email_to',
+		'subject': 'subject',
+	};
 	const oSql = oCFD1.sql();
 	oSql.select(select);
 	oSql.from('mails');
@@ -26,7 +26,7 @@ app.get("/", async (c) => {
 app.get("/:id", async (c) => {
 	const oCFD1 = CFD1(c.env.DB);
 	const id = Number(c.req.param("id"));
-	if (!id) {
+	if (isNaN(id)) {
 		return c.json({ message: "require[id]" }, 400);
 	}
 	const oSql = oCFD1.sql();

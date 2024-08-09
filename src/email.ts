@@ -22,54 +22,53 @@ import PostalMime from 'postal-mime';
 // 存储邮件时
 const textNone: string | null = null;
 
-function getHeaders(headers: Headers) {
+function getHeaders(headers: Headers): Record<string, string> {
 	// 将Headers去掉一些无用信息，然后转换成JSON字符串
-	const headerMap = new Map<string, string>();
+	const rHeader: Record<string, string> = {};
 	headers.forEach((value, key) => {
-		headerMap.set(key, value);
+		rHeader[key] = value;
 	});
 	if (0) {
 		// 发件人和收件人信息，可能有用，留着不删
-		headerMap.delete('date');
-		headerMap.delete('from');
-		headerMap.delete('to');
-		headerMap.delete('cc');
+		delete rHeader['date'];
+		delete rHeader['from'];
+		delete rHeader['to'];
+		delete rHeader['cc'];
 	}
 	if (0) {
 		// 使用的邮件软件，可能有用，留着不删
-		headerMap.delete('x-mailer'); // icloud和QQ才有
+		delete rHeader['x-mailer']; // icloud和QQ才有
 	}
 	if (0) {
 		// 发送者的IP地址，可能有用，留着不删
-		headerMap.delete('received'); // gmail,icloud才有
-		headerMap.delete('x-received'); // gmail才有
+		delete rHeader['received']; // gmail,icloud才有
+		delete rHeader['x-received']; // gmail才有
 	}
 	if (1) {
 		// 已经放到表头了，这边就不用了，可以删了
-		headerMap.delete('subject');
+		delete rHeader['subject'];
 	}
 	if (1) {
 		// 常用的但用不到
-		headerMap.delete('mime-version');
-		headerMap.delete('content-transfer-encoding');
-		headerMap.delete('content-type');
-		headerMap.delete('dkim-signature');
-		headerMap.delete('message-id');
+		delete rHeader['mime-version'];
+		delete rHeader['content-transfer-encoding'];
+		delete rHeader['content-type'];
+		delete rHeader['dkim-signature'];
+		delete rHeader['message-id'];
 	}
 	if (1) {
 		// 不同邮件商自定义的内容需要删除
-		headerMap.delete('x-qq-xmailinfo'); // QQ才有
-		headerMap.delete('x-qq-xmrinfo'); // QQ才有
-		headerMap.delete('x-gm-message-state'); // gmail才有
-		headerMap.delete('x-google-dkim-signature'); // gmail才有
-		headerMap.delete('x-google-smtp-source'); // gmail才有
-		headerMap.delete('x-proofpoint-guid'); // icloud才有
-		headerMap.delete('x-proofpoint-orig-guid'); // icloud才有
-		headerMap.delete('x-proofpoint-spam-details'); // icloud才有
-		headerMap.delete('x-proofpoint-virus-version'); // icloud才有
-		// headerMap.delete(''];
+		delete rHeader['x-qq-xmailinfo']; // QQ才有
+		delete rHeader['x-qq-xmrinfo']; // QQ才有
+		delete rHeader['x-gm-message-state']; // gmail才有
+		delete rHeader['x-google-dkim-signature']; // gmail才有
+		delete rHeader['x-google-smtp-source']; // gmail才有
+		delete rHeader['x-proofpoint-guid']; // icloud才有
+		delete rHeader['x-proofpoint-orig-guid']; // icloud才有
+		delete rHeader['x-proofpoint-spam-details']; // icloud才有
+		delete rHeader['x-proofpoint-virus-version']; // icloud才有
 	}
-	return JSON.stringify(headerMap);
+	return rHeader;
 }
 
 async function decodeStreamToBuffer(stream: ReadableStream) {
@@ -120,22 +119,24 @@ export default async (message: ForwardableEmailMessage, env: Env, ctx: Execution
 	// 处理 email 的逻辑放在这里
 	const domain_from = extractDomain(message.from);
 	// 创建mMsgData，用于存到数据库
-	const mMsgData = new Map<string, null | string | number>();
-	mMsgData.set('created', new Date().getTime()); // 收件日期（REAL）
-	mMsgData.set('domain_from', domain_from);
-	mMsgData.set('domain_to', extractDomain(message.to));
-	mMsgData.set('email_from', message.from) // 发件人
-	mMsgData.set('email_to', message.to); // 收件人
-	mMsgData.set('headers', getHeaders(message.headers)); // 其他头信息
-	mMsgData.set('subject', message.headers.get('subject')); // 邮件主题
+	const mMsgData: Record<string, string | number> = {
+		created: new Date().getTime(), // 收件日期（REAL）
+		domain_from: domain_from,
+		domain_to: extractDomain(message.to),
+		email_from: message.from,// 发件人
+		email_to: message.to, // 收件人
+		headers: JSON.stringify(getHeaders(message.headers)), // 其他头信息
+		subject: message.headers.get('subject') ?? '', // 邮件主题
+	};
+
 	try {
 		const postalMime = new PostalMime();
 		const parsedMsg = await postalMime.parse(message.raw);
 		if (parsedMsg.text) {
-			mMsgData.set('body_text', parsedMsg.text); // 纯文本
+			mMsgData['body_text'] = parsedMsg.text; // 纯文本
 		}
 		if (parsedMsg.html) {
-			mMsgData.set('body_html', parsedMsg.html); // 富文本
+			mMsgData['body_html'] = parsedMsg.html; // 富文本
 		}
 	} catch (e) {
 		console.error("PostalMime解析失败", e);

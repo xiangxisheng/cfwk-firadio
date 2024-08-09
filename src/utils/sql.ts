@@ -1,35 +1,27 @@
 interface SqlParam {
-	aSelect: Array<string>,
-	sFrom: null | String,
-	aWhere: null | Array<[string, any]>,
-	aOrderBy: null | Array<string>,
+	mSelect?: Record<string, string>,
+	sFrom?: String,
+	aWhere?: Array<[string, any]>,
+	aOrderBy?: Array<string>,
 	isLock: Boolean,
-	iLimit: null | Number,
-	iOffset: null | Number,
-	sBuildSql: null | String,
-	aBuildParam: null | Array<any>,
+	iLimit?: Number,
+	iOffset?: Number,
+	sBuildSql?: String,
+	aBuildParam?: Array<any>,
 }
 
 export function SQL() {
 	//取得sql实例
 	const mData: SqlParam = {
-		aSelect: new Array('*'),
-		sFrom: null,
-		aWhere: null,
-		aOrderBy: null,
 		isLock: false,
-		iLimit: null,
-		iOffset: null,
-		sBuildSql: null,
-		aBuildParam: null,
 	};
 	const oSql = {
 		from(sFrom: string) {
 			mData.sFrom = sFrom;
 			return oSql;
 		},
-		select(aSelect: string[]) {
-			mData.aSelect = aSelect;
+		select(mSelect: Record<string, string>) {
+			mData.mSelect = mSelect;
 			return oSql;
 		},
 		where(aWhere: Array<[string, Array<any>]>) {
@@ -56,12 +48,17 @@ export function SQL() {
 			// 构建[SELECT]查询语句
 			mData.aBuildParam = new Array<any>();
 			const aSql = [];
-			aSql.push(`SELECT ${mData.aSelect.join(',')}`);
-			if (mData.sFrom === null) {
+			const aSelect = new Array<string>();
+			for (const k in mData.mSelect) {
+				const v = mData.mSelect[k];
+				aSelect.push(`${v} AS ${k}`);
+			}
+			aSql.push(`SELECT ${aSelect.length === 0 ? '*' : aSelect.join(',')}`);
+			if (mData.sFrom === undefined) {
 				throw new Error('未指定FROM表名');
 			}
 			aSql.push(`FROM ${mData.sFrom}`);
-			if (mData.aWhere !== null) {
+			if (mData.aWhere !== undefined) {
 				const aWhereSql = new Array<string>();
 				for (const aWhereOne of mData.aWhere) {
 					aWhereSql.push(aWhereOne[0]);
@@ -73,13 +70,13 @@ export function SQL() {
 					aSql.push(`WHERE (${aWhereSql.join(')AND(')})`);
 				}
 			}
-			if (mData.aOrderBy !== null) {
+			if (mData.aOrderBy !== undefined) {
 				aSql.push(`ORDER BY ${mData.aOrderBy.join(',')}`);
 			}
-			if (mData.iLimit !== null) {
+			if (mData.iLimit !== undefined) {
 				aSql.push(`LIMIT ${mData.iLimit}`);
 			}
-			if (mData.iOffset !== null) {
+			if (mData.iOffset !== undefined) {
 				aSql.push(`OFFSET ${mData.iOffset}`);
 			}
 			if (mData.isLock) {
@@ -88,12 +85,12 @@ export function SQL() {
 			mData.sBuildSql = aSql.join(' ');
 			return oSql;
 		},
-		buildInsert(mValue: Map<string, null | string | number>) {
+		buildInsert(mValue: Record<string, string | number>) {
 			// 构建[INSERT]SQL语句
-			const columns = Array.from(mValue.keys()).join(', ');
-			const placeholders = Array.from(mValue.keys()).map(() => '?').join(', ');
+			const columns = Array.from(Object.keys(mValue)).join(', ');
+			const placeholders = Array.from(Object.keys(mValue)).map(() => '?').join(', ');
 			mData.sBuildSql = `INSERT INTO ${mData.sFrom} (${columns}) VALUES (${placeholders})`;
-			mData.aBuildParam = Array.from(mValue.values());
+			mData.aBuildParam = Array.from(Object.values(mValue));
 			return oSql;
 		},
 		getSQL() {

@@ -1,19 +1,11 @@
-import { Route } from '../../utils/route';
-import { CFD1 } from '../../utils/cfd1';
-import { menu_from_list_to_tree } from '../../utils/menu';
-
-export interface ResultData {
-	code: number,
-	type: 'success' | 'error',
-	message: string,
-	result: any,
-};
-
-function cJson(c: any, data: ResultData) {
-	return c.json(data);
-}
+import { Route } from '../../../utils/route';
+import { CFD1 } from '../../../utils/cfd1';
+import { cJson } from '../../../utils/vben';
+import { menu_from_list_to_tree } from '../../../utils/menu';
 
 const app = Route();
+
+app.route('/system', require('./system').default);
 
 app.get('/page-login', (c) => {
 	const result = {
@@ -74,9 +66,26 @@ app.get('/getPermCode', (c) => {
 
 app.get('/getMenuList', async (c) => {
 	const oCFD1 = CFD1(c.env.DB);
-	const oSql = oCFD1.sql().from('pre_system_menus').where([["type IN(0,1)", []]]).buildSelect();
-	const result = menu_from_list_to_tree((await oCFD1.all(oSql)).results);
-	return cJson(c, { code: 0, type: 'success', message: 'ok', result });
+	const select = {
+		'id': 'id',
+		'parent_id': 'parent_id',
+		'name': 'name',
+		'title': 'title',
+		'path': 'path',
+		'icon': 'icon',
+		'component': 'component',
+		'redirect': 'redirect',
+		'meta': 'meta',
+	};
+	const oSql = oCFD1.sql().select(select).from('pre_system_menus').where([["type IN(0,1)", []]]).orderBy(['orderNo']).buildSelect();
+	const results = (await oCFD1.all(oSql)).results;
+	for (const mRow of results) {
+		const meta: Record<string, unknown> = typeof mRow['meta'] === 'string' ? JSON.parse(mRow['meta']) : {};
+		meta['icon'] = mRow['icon'];
+		meta['title'] = mRow['title'];
+		mRow['meta'] = meta;
+	}
+	return cJson(c, { code: 0, type: 'success', message: 'ok', result: menu_from_list_to_tree(results) });
 });
 
 export default app;
