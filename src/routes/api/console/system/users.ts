@@ -161,10 +161,10 @@ app.get('/', async (c) => {
 		},
 	];
 	if (action === 'init') {
-		const select = Array<string>();
+		const select: Record<string, string> = {};
 		for (const column of columns) {
 			if (typeof column.dataIndex == 'string') {
-				select.push(column.dataIndex);
+				select[column.dataIndex] = column.dataIndex;
 			}
 		}
 		const oCFD1 = CFD1(c.env.DB);
@@ -195,11 +195,11 @@ app.post('/', async (c) => {
 	console.log(jsonReq);
 	if (action === 'create') {
 		const oCFD1 = CFD1(c.env.DB);
-		const mAddData = new Map<string, null | string | number>();
+		const mAddData: Record<string, string | number> = {};
 		for (const column of columns) {
 			if (typeof column.dataIndex == 'string') {
 				if (column.dataIndex === 'created') {
-					mAddData.set(column.dataIndex, +new Date());
+					mAddData[column.dataIndex] = +new Date();
 					continue;
 				}
 				if (column.disabled) {
@@ -208,7 +208,7 @@ app.post('/', async (c) => {
 				if (column.readonly) {
 					continue;
 				}
-				mAddData.set(column.dataIndex, jsonReq[column.dataIndex]);
+				mAddData[column.dataIndex] = jsonReq[column.dataIndex];
 			}
 		}
 		const oSql = oCFD1.sql().from(table.from).buildInsert(mAddData);
