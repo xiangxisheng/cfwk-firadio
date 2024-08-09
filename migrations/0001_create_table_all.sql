@@ -1,4 +1,3 @@
--- Migration number: 0001 	 2024-07-26T13:45:42.161Z
 -- CreateTable
 CREATE TABLE "mails" (
     "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
@@ -22,5 +21,28 @@ CREATE TABLE "users" (
     "roles" TEXT NOT NULL
 );
 
+-- CreateTable
+CREATE TABLE "pre_system_menus" (
+    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "created" INTEGER NOT NULL,
+    "updated" INTEGER,
+    "status" INTEGER NOT NULL,
+    "parent_id" INTEGER NOT NULL,
+    "type" INTEGER NOT NULL,
+    "name" TEXT NOT NULL,
+    "title" TEXT NOT NULL,
+    "path" TEXT,
+    "icon" TEXT,
+    "component" TEXT,
+    "orderNo" INTEGER NOT NULL,
+    "keepalive" INTEGER NOT NULL,
+    "redirect" TEXT,
+    "meta" TEXT
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "pre_system_menus_parent_id_name_key" ON "pre_system_menus"("parent_id", "name");
+

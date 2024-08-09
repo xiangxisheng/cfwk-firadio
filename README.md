@@ -4,6 +4,11 @@
 npx prisma migrate diff --from-empty --to-schema-datamodel ./prisma/schema.prisma --script > migrations/0001_create_table_all.sql
 ```
 
+## 导入SQL文件
+```
+npx wrangler d1 execute cfd1-firadio-wnam --remote --file migrations/0002_init_record.sql
+```
+
 ## 关于更新数据库 migrations
 
 ### 1、首先编辑[schema.prisma]文件，添加或修改相应的表结构，然后生成[类文件]

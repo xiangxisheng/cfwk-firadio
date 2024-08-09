@@ -28,3 +28,23 @@ model users {
   password String
   roles    String
 }
+
+model pre_system_menus {
+  id        Int     @id @default(autoincrement())
+  created   Int
+  updated   Int?
+  status    Int
+  parent_id Int
+  type      Int
+  name      String
+  title     String
+  path      String?
+  icon      String?
+  component String?
+  orderNo   Int
+  keepalive Int
+  redirect  String?
+  meta      String?
+
+  @@unique([parent_id, name])
+}

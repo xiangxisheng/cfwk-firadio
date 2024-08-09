@@ -32,7 +32,7 @@ export function SQL() {
 			mData.aSelect = aSelect;
 			return oSql;
 		},
-		where(aWhere: Array<[string, any]>) {
+		where(aWhere: Array<[string, Array<any>]>) {
 			mData.aWhere = aWhere;
 			return oSql;
 		},
@@ -65,7 +65,9 @@ export function SQL() {
 				const aWhereSql = new Array<string>();
 				for (const aWhereOne of mData.aWhere) {
 					aWhereSql.push(aWhereOne[0]);
-					mData.aBuildParam.push(aWhereOne[1]);
+					for (const val of aWhereOne[1]) {
+						mData.aBuildParam.push(val);
+					}
 				}
 				if (aWhereSql.length > 0) {
 					aSql.push(`WHERE (${aWhereSql.join(')AND(')})`);

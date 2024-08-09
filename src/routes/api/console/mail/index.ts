@@ -32,7 +32,7 @@ app.get("/:id", async (c) => {
 	const oSql = oCFD1.sql();
 	oSql.from('mails');
 	const aWhere = new Array<[string, any]>();
-	aWhere.push(['id=?', id]);
+	aWhere.push(['id=?', [id]]);
 	oSql.where(aWhere);
 	oSql.buildSelect();
 	console.log('执行的SQL语句', oCFD1.getSQL(oSql));
