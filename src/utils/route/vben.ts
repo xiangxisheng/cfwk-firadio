@@ -26,7 +26,7 @@ app.get("/", async (c) => {
 	<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=0" />
 	<title>${__CONF__.VITE_GLOB_APP_TITLE}</title>
 	<link rel="icon" href="${__CONF__.VITE_PUBLIC_PATH}/favicon.ico" />
-	<script type="module" crossorigin src="${__CONF__.VITE_PUBLIC_PATH}/assets/entry/index-Csxay5Zd.js"></script>
+	<script type="module" crossorigin src="${__CONF__.VITE_PUBLIC_PATH}/assets/entry/index-BOZ3nP-o.js"></script>
 	<link rel="modulepreload" crossorigin href="${__CONF__.VITE_PUBLIC_PATH}/assets/vue-BjERyvPm.js">
 	<link rel="modulepreload" crossorigin href="${__CONF__.VITE_PUBLIC_PATH}/assets/antd-CXImNLC1.js">
 	<link rel="stylesheet" crossorigin href="${__CONF__.VITE_PUBLIC_PATH}/assets/index-jE23RaVa.css">
