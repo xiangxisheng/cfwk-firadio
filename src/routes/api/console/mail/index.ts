@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { CFD1 } from '../../../../utils/cfd1';
+import { CFD1 } from '@/utils/cfd1';
 
 const app = new Hono<{ Bindings: Env }>();
 

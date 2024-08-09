@@ -1,6 +1,6 @@
 import { Hono, Context } from 'hono';
-import { BatchButton, TableColumn, Table, TablePagination, ResultData, ResponseResultData, ResponseMessage } from '../../../../utils/interface';
-import { CFD1 } from '../../../../utils/cfd1';
+import { BatchButton, TableColumn, Table, TablePagination, ResultData, ResponseResultData, ResponseMessage } from '@/utils/interface';
+import { CFD1 } from '@/utils/cfd1';
 
 // 定义一个接口来扩展Context
 interface CustomContext extends Context {

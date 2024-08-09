@@ -1,6 +1,6 @@
 // 接口定义
 import { Hono } from "hono";
-import crc32 from "../utils/crc32.js";
+import crc32 from "@/utils/crc32.js";
 
 const app = new Hono();
 
@@ -12,7 +12,7 @@ app.onError((err, c) => {
 
 app.route('/api', require('./api').default);
 
-app.route('/', require('../utils/route/vben').default);
+app.route('/', require('@/utils/route/vben').default);
 
 app.get('/', (c) => {
 	const clientIP = c.req.header("CF-Connecting-IP");

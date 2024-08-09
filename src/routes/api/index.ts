@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { ResponseResultData, ResponseMessage } from '../../utils/interface';
+import { ResponseResultData, ResponseMessage } from '@/utils/interface';
 
 const app = new Hono();
 

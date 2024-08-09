@@ -1,5 +1,5 @@
 // CF的D1数据库操作类
-import { CFD1 } from './utils/cfd1';
+import { CFD1 } from '@/utils/cfd1';
 
 // 合并多个二进制数据
 import { Buffer } from "node:buffer";

@@ -1,7 +1,7 @@
-import { Route } from '../../../utils/route';
-import { CFD1 } from '../../../utils/cfd1';
-import { cJson } from '../../../utils/vben';
-import { menu_from_list_to_tree } from '../../../utils/menu';
+import { Route } from '@/utils/route';
+import { CFD1 } from '@/utils/cfd1';
+import { cJson } from '@/utils/vben';
+import { menu_from_list_to_tree } from '@/utils/menu';
 
 const app = Route();
 

@@ -1,6 +1,6 @@
-import { Route } from '../../../utils/route';
-import { CFD1 } from '../../../utils/cfd1';
-import { cJson } from '../../../utils/vben';
+import { Route } from '@/utils/route';
+import { CFD1 } from '@/utils/cfd1';
+import { cJson } from '@/utils/vben';
 
 const app = Route();
 
