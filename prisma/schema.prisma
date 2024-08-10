@@ -21,14 +21,6 @@ model mails {
   body_html   String?
 }
 
-model users {
-  user_id  Int    @id @default(autoincrement())
-  created  Int
-  email    String @unique
-  password String
-  roles    String
-}
-
 model pre_system_menus {
   id        Int     @id @default(autoincrement())
   created   Int
@@ -47,4 +39,29 @@ model pre_system_menus {
   meta      String?
 
   @@unique([parent_id, name])
+}
+
+// 系统用户
+model pre_system_users {
+  id             Int    @id @default(autoincrement())
+  created        Int // 用户注册时间
+  updated        Int? // 更新时间(密码修改/冻结时间)
+  logged         Int? // 最后登录时间
+  login_name     String @unique // 登录名称(可以是用户名|邮箱|手机号码|QQ号码)
+  login_password String // 用户的登录密码
+  status         Int    @default(0) // 状态(0:未知,1:正常,2:已冻结)
+  roles          String // 用户所示角色组(user,admin)
+}
+
+// 系统用户会话
+model pre_system_sessions {
+  id      Int    @id @default(autoincrement())
+  created Int
+  updated Int? // 更新时间(登入/登出时间)
+  logged  Int? // 最后登录时间
+  token   String @unique
+  user_id Int // 登录的用户id
+  status  Int    @default(0) // 状态(0:未知,1:正常,2:已登出)
+
+  @@index([user_id])
 }

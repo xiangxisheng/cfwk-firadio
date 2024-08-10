@@ -13,15 +13,6 @@ CREATE TABLE "mails" (
 );
 
 -- CreateTable
-CREATE TABLE "users" (
-    "user_id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-    "created" INTEGER NOT NULL,
-    "email" TEXT NOT NULL,
-    "password" TEXT NOT NULL,
-    "roles" TEXT NOT NULL
-);
-
--- CreateTable
 CREATE TABLE "pre_system_menus" (
     "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     "created" INTEGER NOT NULL,
@@ -40,9 +31,38 @@ CREATE TABLE "pre_system_menus" (
     "meta" TEXT
 );
 
--- CreateIndex
-CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
+-- CreateTable
+CREATE TABLE "pre_system_users" (
+    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "created" INTEGER NOT NULL,
+    "updated" INTEGER,
+    "logged" INTEGER,
+    "login_name" TEXT NOT NULL,
+    "login_password" TEXT NOT NULL,
+    "status" INTEGER NOT NULL DEFAULT 0,
+    "roles" TEXT NOT NULL
+);
+
+-- CreateTable
+CREATE TABLE "pre_system_sessions" (
+    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "created" INTEGER NOT NULL,
+    "updated" INTEGER,
+    "logged" INTEGER,
+    "token" TEXT NOT NULL,
+    "user_id" INTEGER NOT NULL,
+    "status" INTEGER NOT NULL DEFAULT 0
+);
 
 -- CreateIndex
 CREATE UNIQUE INDEX "pre_system_menus_parent_id_name_key" ON "pre_system_menus"("parent_id", "name");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "pre_system_users_login_name_key" ON "pre_system_users"("login_name");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "pre_system_sessions_token_key" ON "pre_system_sessions"("token");
+
+-- CreateIndex
+CREATE INDEX "pre_system_sessions_user_id_idx" ON "pre_system_sessions"("user_id");
 
