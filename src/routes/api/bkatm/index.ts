@@ -85,7 +85,7 @@ app.post('/login', async (c) => {
 app.use('*', async (c, next) => {
 	const authorization = c.req.header("authorization");
 	if (!authorization) {
-		return cJson(c, { code: -1, type: 'error', message: '请先登录', result: null });
+		return cJson(c, { code: 401, type: 'error', message: '请先登录', result: null });
 	}
 	const oCFD1 = CFD1(c.env.DB);
 	const select = {
@@ -97,13 +97,13 @@ app.use('*', async (c, next) => {
 	console.log('执行的SQL语句', oCFD1.getSQL(oSqlSession));
 	const session = await oCFD1.first(oSqlSession);
 	if (!session) {
-		return cJson(c, { code: -1, type: 'error', message: '会话失效', result: null });
+		return cJson(c, { code: 401, type: 'error', message: '会话失效', result: null });
 	}
 	if (session['status'] === 2) {
-		return cJson(c, { code: -1, type: 'error', message: '用户已退出登录', result: null });
+		return cJson(c, { code: 401, type: 'error', message: '用户已退出登录', result: null });
 	}
 	if (session['status'] !== 1) {
-		return cJson(c, { code: -1, type: 'error', message: '会话状态异常', result: null });
+		return cJson(c, { code: 401, type: 'error', message: '会话状态异常', result: null });
 	}
 	const selectUser = {
 		'login_name': 'login_name',
@@ -114,13 +114,13 @@ app.use('*', async (c, next) => {
 	console.log('执行的SQL语句', oCFD1.getSQL(oSqlUser));
 	const user = await oCFD1.first(oSqlUser);
 	if (!user) {
-		return cJson(c, { code: -1, type: 'error', message: '用户不存在', result: null });
+		return cJson(c, { code: 401, type: 'error', message: '用户不存在', result: null });
 	}
 	if (user['status'] === 2) {
-		return cJson(c, { code: -1, type: 'error', message: '用户已被冻结', result: null });
+		return cJson(c, { code: 401, type: 'error', message: '用户已被冻结', result: null });
 	}
 	if (user['status'] !== 1) {
-		return cJson(c, { code: -1, type: 'error', message: '用户状态异常', result: null });
+		return cJson(c, { code: 401, type: 'error', message: '用户状态异常', result: null });
 	}
 	c.set("user", user);
 	return await next();

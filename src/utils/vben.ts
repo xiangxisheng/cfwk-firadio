@@ -28,6 +28,10 @@ export class ResponseMessage extends Error {
 }
 
 export function cJson(c: any, data: ResultData) {
-	return c.json(data);
+	var status = 200;
+	if (data.code > 200) {
+		status = data.code;
+	}
+	return c.json(data, status);
 }
 
