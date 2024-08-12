@@ -5,6 +5,10 @@ compatibility_date = "2024-07-25"
 # compatibility_flags = ["nodejs_compat"]
 node_compat = true
 
+send_email = [
+	{type = "send_email", name = "SEB"},
+]
+
 # Automatically place your workloads in an optimal location to minimize latency.
 # If you are running back-end logic in a Worker, running it closer to your back-end infrastructure
 # rather than the end user may result in better performance.

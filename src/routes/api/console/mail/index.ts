@@ -1,7 +1,17 @@
 import { Route } from '@/utils/route';
 import { CFD1 } from '@/utils/cfd1';
+import { SendEmail } from '@/utils/mail';
 
 const app = Route();
+
+app.get("/send", async (c) => {
+	const mail = new SendEmail(c.env);
+	mail.setSender("notice@email-all.com", "邮件通知");
+	mail.setRecipient("wolerba@gmail.com");
+	mail.addTextPlain("邮件主题", "邮件内容");
+	await mail.send();
+	return c.json({ message: '邮件发送成功' });
+});
 
 app.get("/", async (c) => {
 	const oCFD1 = CFD1(c.env.DB);
