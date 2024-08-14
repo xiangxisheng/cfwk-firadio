@@ -144,7 +144,7 @@ export default async (message: ForwardableEmailMessage, env: Env, ctx: Execution
 		const message_raw = decodeBuffer(await decodeStreamToBuffer(message.raw));
 		// 可以将这个邮件保存到单独的表
 	}
-	const oCFD1 = CFD1(env.DB);
+	const oCFD1 = new CFD1(env.DB);
 	const oSql = oCFD1.sql().from('mails').buildInsert(mMsgData);
 	console.log('插入数据库表的SQL语句', oCFD1.getSQL(oSql));
 	const r2 = await oCFD1.all(oSql);

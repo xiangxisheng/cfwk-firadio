@@ -162,7 +162,7 @@ app.get('/', async (c) => {
 				select[column.dataIndex] = column.dataIndex;
 			}
 		}
-		const oCFD1 = CFD1(c.env.DB);
+		const oCFD1 = new CFD1(c.env.DB);
 		const oSql = oCFD1.sql();
 		oSql.select(select);
 		oSql.from(table.from);
@@ -189,7 +189,7 @@ app.post('/', async (c) => {
 	const jsonReq = await c.req.json();
 	console.log(jsonReq);
 	if (action === 'create') {
-		const oCFD1 = CFD1(c.env.DB);
+		const oCFD1 = new CFD1(c.env.DB);
 		const mAddData: Record<string, string | number> = {};
 		for (const column of columns) {
 			if (typeof column.dataIndex == 'string') {

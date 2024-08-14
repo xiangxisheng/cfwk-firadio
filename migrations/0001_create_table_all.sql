@@ -32,6 +32,13 @@ CREATE TABLE "pre_system_menus" (
 );
 
 -- CreateTable
+CREATE TABLE "pre_system_configs" (
+    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "name" TEXT NOT NULL,
+    "value" TEXT NOT NULL
+);
+
+-- CreateTable
 CREATE TABLE "pre_system_users" (
     "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     "created" INTEGER NOT NULL,
@@ -56,6 +63,9 @@ CREATE TABLE "pre_system_sessions" (
 
 -- CreateIndex
 CREATE UNIQUE INDEX "pre_system_menus_parent_id_name_key" ON "pre_system_menus"("parent_id", "name");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "pre_system_configs_name_key" ON "pre_system_configs"("name");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "pre_system_users_login_name_key" ON "pre_system_users"("login_name");

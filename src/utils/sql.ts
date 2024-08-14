@@ -93,6 +93,27 @@ export function SQL() {
 			mData.aBuildParam = Array.from(Object.values(mValue));
 			return oSql;
 		},
+		buildUpsert(mConflict: Record<string, string | number>, mSet: Record<string, string | number>) {
+			// 构建[INSERT]SQL语句
+			const columns: string[] = [];
+			const conflict: string[] = [];
+			const updateSets: string[] = [];
+			const mValue: Record<string, string | number> = {};
+			for (const k in mConflict) {
+				columns.push(`${k}`);
+				conflict.push(`${k}`);
+				mValue[k] = mConflict[k];
+			}
+			for (const k in mSet) {
+				columns.push(`${k}`);
+				updateSets.push(`${k}=excluded.${k}`);
+				mValue[k] = mSet[k];
+			}
+			const placeholders = Array.from(Object.keys(columns)).map(() => '?').join(',');
+			mData.sBuildSql = `INSERT INTO ${mData.sFrom}(${columns.join(',')})VALUES(${placeholders})ON CONFLICT(${conflict.join(',')}) DO UPDATE SET ${updateSets.join(',')}`;
+			mData.aBuildParam = Array.from(Object.values(mValue));
+			return oSql;
+		},
 		getSQL() {
 			// 获取预编译用到的SQL语句
 			if (!mData.sBuildSql) {

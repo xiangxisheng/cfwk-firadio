@@ -41,6 +41,13 @@ model pre_system_menus {
   @@unique([parent_id, name])
 }
 
+// 系统配置
+model pre_system_configs {
+  id    Int    @id @default(autoincrement())
+  name  String @unique
+  value String // JSON格式存储
+}
+
 // 系统用户
 model pre_system_users {
   id             Int    @id @default(autoincrement())
