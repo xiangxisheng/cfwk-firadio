@@ -3,8 +3,9 @@ import { Route } from '@/utils/route';
 const app = Route();
 
 app.get("/", async (c) => {
+	const config_site = await c.get('configs').site.data();
 	const __CONF__ = {
-		VITE_GLOB_APP_TITLE: "BKATM",
+		VITE_GLOB_APP_TITLE: config_site.title.value,
 		VITE_GLOB_API_URL: "/api/bkatm",
 		VITE_GLOB_UPLOAD_URL: "/api/bkatm/upload",
 		VITE_GLOB_API_URL_PREFIX: "",

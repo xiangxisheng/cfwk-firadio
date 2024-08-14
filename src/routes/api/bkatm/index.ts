@@ -1,5 +1,4 @@
 import { Route } from '@/utils/route';
-import { Config } from '@/utils/config';
 import { md5 } from '@/utils/crypto';
 import { CFD1 } from '@/utils/cfd1';
 import { cJson, ResponseResultData, ResponseMessage } from '@/utils/vben';
@@ -21,35 +20,6 @@ app.onError((err, c) => {
 	return cJson(c, { code: -1, type: 'error', message: err.message, result: null });
 });
 
-app.use('*', async (c, next) => {
-	const oCFD1 = new CFD1(c.env.DB);
-	const config = new Config({
-		async get(name: string): Promise<Record<string, string | number>> {
-			const select = {
-				'value': 'value',
-			};
-			const oSqlConfig = oCFD1.sql().select(select).from('pre_system_configs').where([["name=?", [name]]]).buildSelect();
-			//console.log('执行的SQL语句', oCFD1.getSQL(oSqlConfig));
-			const rConfig = await oCFD1.first(oSqlConfig);
-			if (rConfig === null) {
-				return {};
-			}
-			return JSON.parse(rConfig['value'] as string) as Record<string, string | number>;
-		},
-		async save(name: string, data: Record<string, string | number>) {
-			console.log('save', name, JSON.stringify(data));
-			const oSqlConfig = oCFD1.sql().from('pre_system_configs').buildUpsert({ name }, { value: JSON.stringify(data) });
-			console.log('执行的SQL语句', oCFD1.getSQL(oSqlConfig));
-			const sqlResult = await oCFD1.all(oSqlConfig);
-			if (!sqlResult.success) {
-				console.log('sqlResult', sqlResult);
-			}
-		}
-	});
-	c.set('config', config);
-	return await next();
-});
-
 app.get('/page-login', (c) => {
 	const result = {
 		signInTitle: '欢迎使用',
@@ -69,10 +39,10 @@ app.post('/email-otp', async (c) => {
 	const { email } = reqJson;
 	cache.otp = generateRandom(6, '0123456789');
 	// 验证码已发送至您的邮箱
-	const config_email = await c.get('config').email.data();
-	//config_email.api_type.value = 123123;
+	const config_email = await c.get('configs').email.data();
 	console.log('api_type', config_email.api_type.value);
-	//await c.get('config').email.save();
+	config_email.api_type.value = "xixi";
+	await c.get('configs').email.save();
 	return cJson(c, { code: 0, type: 'success', message: `您的验证码是:${cache.otp}`, result: null });
 });
 
