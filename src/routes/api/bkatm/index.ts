@@ -35,7 +35,7 @@ const otpAuth = new OtpAuth();
 app.post('/email-otp', async (c) => {
 	// 发送邮箱验证码
 	const reqJson = await c.req.json();
-	const { email } = reqJson;
+	const { email, action } = reqJson;
 	if (typeof email !== 'string' || email.length === 0) {
 		return cJson(c, { code: -1, type: 'error', message: '请输入E-Mail邮箱', result: null });
 	}
@@ -43,6 +43,29 @@ app.post('/email-otp', async (c) => {
 	const validateEmail = (email: string): boolean => emailRegex.test(email);
 	if (!validateEmail(email)) {
 		return cJson(c, { code: -1, type: 'error', message: '您输入的E-Mail邮箱格式不正确', result: null });
+	}
+	const oCFD1 = new CFD1(c.env.DB);
+	const oSqlUser = oCFD1
+		.sql()
+		.select({ id: 'id' })
+		.from('pre_system_users')
+		.where([['login_name=?', [email]]])
+		.buildSelect();
+	console.log('执行的SQL语句', oCFD1.getSQL(oSqlUser));
+	const user = await oCFD1.first(oSqlUser);
+	switch (action) {
+		case 'register':
+			if (user) {
+				return cJson(c, { code: -1, type: 'error', message: `您输入的[${email}]已经注册过了，请直接登录或重设密码`, result: null });
+			}
+			break;
+		case 'resetpwd':
+			if (!user) {
+				return cJson(c, { code: -1, type: 'error', message: `您输入的[${email}]尚未注册`, result: null });
+			}
+			break;
+		default:
+			return cJson(c, { code: -1, type: 'error', message: `未知的action=>[${action}]`, result: null });
 	}
 	/*
 	const config_email = await c.get('configs').email.data();
@@ -63,17 +86,60 @@ app.post('/email-otp', async (c) => {
 app.post('/email-register', async (c) => {
 	// 通过邮箱注册
 	const reqJson = await c.req.json();
-	const { email, otp } = reqJson;
+	const { email, otp, password } = reqJson;
 	otpAuth.verify(email, otp);
-	return cJson(c, { code: 0, type: 'success', message: `验证码有效`, result: null });
+	const oCFD1 = new CFD1(c.env.DB);
+	const oSqlUser = oCFD1
+		.sql()
+		.select({ id: 'id' })
+		.from('pre_system_users')
+		.where([['login_name=?', [email]]])
+		.buildSelect();
+	console.log('执行的SQL语句', oCFD1.getSQL(oSqlUser));
+	const user = await oCFD1.first(oSqlUser);
+	if (user) {
+		return cJson(c, { code: -1, type: 'error', message: `您输入的[${email}]已经注册过了，请直接登录或重设密码`, result: null });
+	}
+	const sqlResult = await oCFD1.all(
+		oCFD1
+			.sql()
+			.from('pre_system_users')
+			.buildInsert({ created: Date.now(), login_name: email, login_password: await md5(password), status: 1 })
+	);
+	if (!sqlResult.success) {
+		return cJson(c, { code: -1, type: 'error', message: '无法Insert[pre_system_users]', result: null });
+	}
+	return cJson(c, { code: 0, type: 'success', message: `[${email}]注册成功`, result: null });
 });
 
 app.post('/email-resetpwd', async (c) => {
 	// 发送邮箱重置密码
 	const reqJson = await c.req.json();
-	const { email, otp } = reqJson;
+	const { email, otp, password } = reqJson;
 	otpAuth.verify(email, otp);
-	return cJson(c, { code: 0, type: 'success', message: `验证码有效`, result: null });
+	const oCFD1 = new CFD1(c.env.DB);
+	const oSqlUser = oCFD1
+		.sql()
+		.select({ id: 'id' })
+		.from('pre_system_users')
+		.where([['login_name=?', [email]]])
+		.buildSelect();
+	console.log('执行的SQL语句', oCFD1.getSQL(oSqlUser));
+	const user = await oCFD1.first(oSqlUser);
+	if (!user) {
+		return cJson(c, { code: -1, type: 'error', message: `您输入的[${email}]尚未注册`, result: null });
+	}
+	const sqlResult = await oCFD1.all(
+		oCFD1
+			.sql()
+			.from('pre_system_users')
+			.where([['id=?', [user.id]]])
+			.buildUpdate({ updated: Date.now(), login_password: await md5(password) })
+	);
+	if (!sqlResult.success) {
+		return cJson(c, { code: -1, type: 'error', message: '无法Update[pre_system_users]', result: null });
+	}
+	return cJson(c, { code: 0, type: 'success', message: `[${email}]密码已重设`, result: null });
 });
 
 app.post('/login', async (c) => {

@@ -47,7 +47,7 @@ CREATE TABLE "pre_system_users" (
     "login_name" TEXT NOT NULL,
     "login_password" TEXT NOT NULL,
     "status" INTEGER NOT NULL DEFAULT 0,
-    "roles" TEXT NOT NULL
+    "roles" TEXT NOT NULL DEFAULT 'user'
 );
 
 -- CreateTable
