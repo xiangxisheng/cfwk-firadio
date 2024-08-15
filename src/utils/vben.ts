@@ -1,21 +1,21 @@
 
-interface ResultData {
+interface IResponseData {
 	code: number,
 	type: 'success' | 'error',
 	message: string,
 	result: any,
 };
 
-export class ResponseResultData extends Error {
-	resultData: ResultData;
-	constructor(responseJSON: ResultData) {
+export class ResponseData extends Error {
+	responseData: IResponseData;
+	constructor(responseJSON: IResponseData) {
 		super();
-		this.resultData = responseJSON;
+		this.responseData = responseJSON;
 	}
 }
 
 export class ResponseMessage extends Error {
-	resultData: ResultData;
+	resultData: IResponseData;
 	constructor(message: string) {
 		super();
 		this.resultData = {
@@ -27,7 +27,7 @@ export class ResponseMessage extends Error {
 	}
 }
 
-export function cJson(c: any, data: ResultData) {
+export function cJson(c: any, data: IResponseData) {
 	var status = 200;
 	if (data.code > 200) {
 		status = data.code;

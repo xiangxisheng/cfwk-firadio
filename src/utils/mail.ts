@@ -1,5 +1,17 @@
-import { EmailMessage } from "cloudflare:email";
-import { createMimeMessage, MIMEMessage } from "mimetext";
+import { EmailMessage } from 'cloudflare:email';
+//import { createMimeMessage, MIMEMessage } from 'mimetext';
+class MIMEMessage {
+	setSender(opt: Record<string, string>) {}
+	setRecipient(opt: string) {}
+	setSubject(opt: string) {}
+	addMessage(opt: Record<string, string>) {}
+	asRaw() {
+		return '';
+	}
+}
+function createMimeMessage() {
+	return new MIMEMessage();
+}
 
 export class SendEmail {
 	/*
@@ -20,9 +32,9 @@ export class SendEmail {
 		this.msg = createMimeMessage();
 	}
 
-	setSender(addr: string, name: string = "") {
+	setSender(addr: string, name: string = '') {
 		this.mail_from = addr;
-		if (name === "") {
+		if (name === '') {
 			this.msg.setSender({ addr });
 			return;
 		}
@@ -40,14 +52,10 @@ export class SendEmail {
 			contentType: 'text/plain',
 			data: _msg_data,
 		});
-	};
+	}
 
 	send() {
-		const message = new EmailMessage(
-			this.mail_from,
-			this.mail_to,
-			this.msg.asRaw(),
-		);
+		const message = new EmailMessage(this.mail_from, this.mail_to, this.msg.asRaw());
 		return this.env.SEB.send(message);
 	}
 }

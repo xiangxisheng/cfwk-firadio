@@ -1,7 +1,8 @@
 // 接口定义
 import { Route } from '@/utils/route';
-import crc32 from "@/utils/crc32.js";
-import { Config, ISettingValue } from '@/utils/config';
+import crc32 from '@/utils/crc32.js';
+import { Config } from '@/utils/config';
+import { ISettingValue } from '@/utils/config/base';
 import { CFD1 } from '@/utils/cfd1';
 
 const app = Route();
@@ -30,9 +31,14 @@ app.use('*', async (c, next) => {
 				return config_cache[name];
 			}
 			const select = {
-				'value': 'value',
+				value: 'value',
 			};
-			const oSqlConfig = oCFD1.sql().select(select).from('pre_system_configs').where([["name=?", [name]]]).buildSelect();
+			const oSqlConfig = oCFD1
+				.sql()
+				.select(select)
+				.from('pre_system_configs')
+				.where([['name=?', [name]]])
+				.buildSelect();
 			//console.log('执行的SQL语句', oCFD1.getSQL(oSqlConfig));
 			const rConfig = await oCFD1.first(oSqlConfig);
 			if (rConfig === null) {
@@ -51,7 +57,7 @@ app.use('*', async (c, next) => {
 				console.log('sqlResult', sqlResult);
 			}
 			config_cache[name] = data;
-		}
+		},
 	});
 	c.set('configs', config.configs);
 	return await next();
@@ -64,7 +70,7 @@ app.use('*', async (c: any, next) => {
 	}
 	status.uptimems = Date.now() - status.started;
 	status.reqcount++;
-	const clientIP = c.req.header("CF-Connecting-IP");
+	const clientIP = c.req.header('CF-Connecting-IP');
 	if (!status.reqips[clientIP]) {
 		status.reqips[clientIP] = 0;
 	}
@@ -76,7 +82,7 @@ app.use('*', async (c: any, next) => {
 	return await next();
 });
 
-app.get("/api/status", async (c) => {
+app.get('/api/status', async (c) => {
 	return c.json({ status });
 });
 
@@ -85,7 +91,7 @@ app.route('/api', require('./api').default);
 app.route('/', require('@/utils/route/vben').default);
 
 app.get('/', (c) => {
-	const clientIP = c.req.header("CF-Connecting-IP");
+	const clientIP = c.req.header('CF-Connecting-IP');
 
 	return c.text('API: Users list' + clientIP);
 });
