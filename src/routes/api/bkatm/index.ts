@@ -86,8 +86,8 @@ app.post('/email-otp', async (c) => {
 app.post('/email-register', async (c) => {
 	// 通过邮箱注册
 	const reqJson = await c.req.json();
-	const { email, otp, password } = reqJson;
-	otpAuth.verify(email, otp);
+	const { email, otp_code, password } = reqJson;
+	otpAuth.verify(email, otp_code);
 	const oCFD1 = new CFD1(c.env.DB);
 	const oSqlUser = oCFD1
 		.sql()
@@ -116,8 +116,8 @@ app.post('/email-register', async (c) => {
 app.post('/email-resetpwd', async (c) => {
 	// 发送邮箱重置密码
 	const reqJson = await c.req.json();
-	const { email, otp, password } = reqJson;
-	otpAuth.verify(email, otp);
+	const { email, otp_code, password } = reqJson;
+	otpAuth.verify(email, otp_code);
 	const oCFD1 = new CFD1(c.env.DB);
 	const oSqlUser = oCFD1
 		.sql()
