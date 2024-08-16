@@ -2,14 +2,20 @@ import { Route } from '@/utils/route';
 
 const app = Route();
 
-app.get("/", async (c) => {
+app.get('/', async (c) => {
 	const config_site = await c.get('configs').site.data();
+	const fileCodes = {
+		index_js: 'Buf0DDIR',
+		vue_js: 'BjERyvPm',
+		antd_js: 'BIEwWB4D',
+		index_css: 'jE23RaVa',
+	};
 	const __CONF__ = {
 		VITE_GLOB_APP_TITLE: config_site.title.value,
-		VITE_GLOB_API_URL: "/api/bkatm",
-		VITE_GLOB_UPLOAD_URL: "/api/bkatm/upload",
-		VITE_GLOB_API_URL_PREFIX: "",
-		VITE_PUBLIC_PATH: "https://vue-vben-admin-v2.pages.dev",
+		VITE_GLOB_API_URL: '/api/bkatm',
+		VITE_GLOB_UPLOAD_URL: '/api/bkatm/upload',
+		VITE_GLOB_API_URL_PREFIX: '',
+		VITE_PUBLIC_PATH: 'https://vue-vben-admin-v2.pages.dev',
 	};
 
 	const html = `<!doctype html>
@@ -27,10 +33,10 @@ app.get("/", async (c) => {
 	<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=0" />
 	<title>${__CONF__.VITE_GLOB_APP_TITLE}</title>
 	<link rel="icon" href="${__CONF__.VITE_PUBLIC_PATH}/favicon.ico" />
-	<script type="module" crossorigin src="${__CONF__.VITE_PUBLIC_PATH}/assets/entry/index-BOZ3nP-o.js"></script>
-	<link rel="modulepreload" crossorigin href="${__CONF__.VITE_PUBLIC_PATH}/assets/vue-BjERyvPm.js">
-	<link rel="modulepreload" crossorigin href="${__CONF__.VITE_PUBLIC_PATH}/assets/antd-CXImNLC1.js">
-	<link rel="stylesheet" crossorigin href="${__CONF__.VITE_PUBLIC_PATH}/assets/index-jE23RaVa.css">
+	<script type="module" crossorigin src="${__CONF__.VITE_PUBLIC_PATH}/assets/entry/index-${fileCodes.index_js}.js"></script>
+	<link rel="modulepreload" crossorigin href="${__CONF__.VITE_PUBLIC_PATH}/assets/vue-${fileCodes.vue_js}.js">
+	<link rel="modulepreload" crossorigin href="${__CONF__.VITE_PUBLIC_PATH}/assets/antd-${fileCodes.antd_js}.js">
+	<link rel="stylesheet" crossorigin href="${__CONF__.VITE_PUBLIC_PATH}/assets/index-${fileCodes.index_css}.css">
 </head>
 
 <body>
