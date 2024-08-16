@@ -50,7 +50,7 @@ app.use('*', async (c, next) => {
 		async save(name: string, data: Record<string, ISettingValue>) {
 			const jData = JSON.stringify(data);
 			console.log('save', name, jData);
-			const oSqlConfig = oCFD1.sql().from('pre_system_configs').buildUpsert({ name }, { value: jData });
+			const oSqlConfig = oCFD1.sql().from('pre_system_configs').conflict({ name }).set({ value: jData }).buildUpsert();
 			console.log('执行的SQL语句', oCFD1.getSQL(oSqlConfig));
 			const sqlResult = await oCFD1.all(oSqlConfig);
 			if (!sqlResult.success) {

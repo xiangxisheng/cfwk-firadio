@@ -2,7 +2,7 @@
 import { CFD1 } from '@/utils/cfd1';
 
 // 合并多个二进制数据
-import { Buffer } from "node:buffer";
+import { Buffer } from 'node:buffer';
 
 // 邮件回复功能中需要创建邮件
 //import { createMimeMessage } from "mimetext";
@@ -14,7 +14,7 @@ function createMimeMessage() {
 		return null;
 	}
 }
-import { EmailMessage } from "cloudflare:email";
+import { EmailMessage } from 'cloudflare:email';
 
 // 解析收到的邮件
 import PostalMime from 'postal-mime';
@@ -88,16 +88,23 @@ function decodeBuffer(bufferData: Buffer, encoding = 'utf-8') {
 
 function extractDomain(email: string) {
 	// 取得邮件的域名部分
-	return email.substring(email.lastIndexOf("@") + 1);
+	return email.substring(email.lastIndexOf('@') + 1);
 }
 
-function getReplyMessage(MessageID: string, email_from: string, email_to: string, replyName: string, replySubject: string, replyText: string) {
+function getReplyMessage(
+	MessageID: string,
+	email_from: string,
+	email_to: string,
+	replyName: string,
+	replySubject: string,
+	replyText: string
+) {
 	// 邮件回复功能
 	const msg = createMimeMessage();
 	if (!msg) {
 		return null;
 	}
-	msg.setHeader("In-Reply-To", MessageID);
+	msg.setHeader('In-Reply-To', MessageID);
 	msg.setSender({ name: replyName, addr: email_to });
 	msg.setRecipient(email_from);
 	msg.setSubject(replySubject);
@@ -106,11 +113,7 @@ function getReplyMessage(MessageID: string, email_from: string, email_to: string
 		data: replyText,
 	});
 
-	const replyMessage = new EmailMessage(
-		email_to,
-		email_from,
-		msg.asRaw()
-	);
+	const replyMessage = new EmailMessage(email_to, email_from, msg.asRaw());
 
 	return replyMessage;
 }
@@ -123,7 +126,7 @@ export default async (message: ForwardableEmailMessage, env: Env, ctx: Execution
 		created: new Date().getTime(), // 收件日期（REAL）
 		domain_from: domain_from,
 		domain_to: extractDomain(message.to),
-		email_from: message.from,// 发件人
+		email_from: message.from, // 发件人
 		email_to: message.to, // 收件人
 		headers: JSON.stringify(getHeaders(message.headers)), // 其他头信息
 		subject: message.headers.get('subject') ?? '', // 邮件主题
@@ -139,25 +142,25 @@ export default async (message: ForwardableEmailMessage, env: Env, ctx: Execution
 			mMsgData['body_html'] = parsedMsg.html; // 富文本
 		}
 	} catch (e) {
-		console.error("PostalMime解析失败", e);
+		console.error('PostalMime解析失败', e);
 		// 单独存储解析不了的邮件
 		const message_raw = decodeBuffer(await decodeStreamToBuffer(message.raw));
 		// 可以将这个邮件保存到单独的表
 	}
 	const oCFD1 = new CFD1(env.DB);
-	const oSql = oCFD1.sql().from('mails').buildInsert(mMsgData);
+	const oSql = oCFD1.sql().from('mails').set(mMsgData).buildInsert();
 	console.log('插入数据库表的SQL语句', oCFD1.getSQL(oSql));
 	const r2 = await oCFD1.all(oSql);
 	if (r2.success) {
 		console.log('邮件保存成功');
 	}
-	const needReplyDomainList = ["icloud.com", "qq.com", "vip.qq.com"];
+	const needReplyDomainList = ['icloud.com', 'qq.com', 'vip.qq.com'];
 	if (!needReplyDomainList.includes(domain_from)) {
 		console.log('该域名无需回复');
 		return;
 	}
-	const InReplyTo = message.headers.get("In-Reply-To");
-	const MessageID = message.headers.get("Message-ID");
+	const InReplyTo = message.headers.get('In-Reply-To');
+	const MessageID = message.headers.get('Message-ID');
 	if (InReplyTo) {
 		console.log('防止无限循环回复');
 		return;
@@ -166,7 +169,14 @@ export default async (message: ForwardableEmailMessage, env: Env, ctx: Execution
 		console.log('没有[MessageID]则无需回复');
 		return;
 	}
-	const replyMessage = getReplyMessage(MessageID, message.from, message.to, "Thank you for your contact", "Email Routing Auto-reply（邮件自动回复）", "We got your message\r\n我们已经收到您的邮件");
+	const replyMessage = getReplyMessage(
+		MessageID,
+		message.from,
+		message.to,
+		'Thank you for your contact',
+		'Email Routing Auto-reply（邮件自动回复）',
+		'We got your message\r\n我们已经收到您的邮件'
+	);
 	if (!replyMessage) {
 		console.log('邮件回复功能未启用');
 		return;

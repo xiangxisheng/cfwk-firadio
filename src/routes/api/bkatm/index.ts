@@ -104,7 +104,8 @@ app.post('/email-register', async (c) => {
 		oCFD1
 			.sql()
 			.from('pre_system_users')
-			.buildInsert({ created: Date.now(), login_name: email, login_password: await md5(password), status: 1 })
+			.set({ created: Date.now(), login_name: email, login_password: await md5(password), status: 1 })
+			.buildInsert()
 	);
 	if (!sqlResult.success) {
 		return cJson(c, { code: -1, type: 'error', message: '无法Insert[pre_system_users]', result: null });
@@ -134,7 +135,8 @@ app.post('/email-resetpwd', async (c) => {
 			.sql()
 			.from('pre_system_users')
 			.where([['id=?', [user.id]]])
-			.buildUpdate({ updated: Date.now(), login_password: await md5(password) })
+			.set({ updated: Date.now(), login_password: await md5(password) })
+			.buildUpdate()
 	);
 	if (!sqlResult.success) {
 		return cJson(c, { code: -1, type: 'error', message: '无法Update[pre_system_users]', result: null });
@@ -180,9 +182,20 @@ app.post('/login', async (c) => {
 		user_id: Number(user['id']),
 		status: 1,
 	};
-	const sqlResult = await oCFD1.all(oCFD1.sql().from('pre_system_sessions').buildInsert(insert));
+	const sqlResult = await oCFD1.all(oCFD1.sql().from('pre_system_sessions').set(insert).buildInsert());
 	if (!sqlResult.success) {
 		return cJson(c, { code: -1, type: 'error', message: '无法处理pre_system_sessions', result: null });
+	}
+	const sqlUpdateUserResult = await oCFD1.all(
+		oCFD1
+			.sql()
+			.from('pre_system_users')
+			.where([['id=?', [user.id]]])
+			.set({ logged: Date.now() })
+			.buildUpdate()
+	);
+	if (!sqlUpdateUserResult.success) {
+		return cJson(c, { code: -1, type: 'error', message: '[pre_system_users]更新失败', result: null });
 	}
 	const result = {
 		roles: [

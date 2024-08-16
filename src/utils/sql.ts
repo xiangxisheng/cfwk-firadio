@@ -6,6 +6,8 @@ interface SqlParam {
 	isLock: Boolean;
 	iLimit?: Number;
 	iOffset?: Number;
+	mSet?: Record<string, string | number>;
+	mConflict?: Record<string, string | number>;
 	sBuildSql?: String;
 	aBuildParam: Array<any>;
 }
@@ -59,6 +61,20 @@ export function SQL() {
 			mData.isLock = true;
 			return oSql;
 		},
+		set(mSet: Record<string, string | number>) {
+			if (mSet.length === 0) {
+				throw new Error('mSet不能为空');
+			}
+			mData.mSet = mSet;
+			return oSql;
+		},
+		conflict(mConflict: Record<string, string | number>) {
+			if (mConflict.length === 0) {
+				throw new Error('mConflict不能为空');
+			}
+			mData.mConflict = mConflict;
+			return oSql;
+		},
 		buildSelect() {
 			// 构建[SELECT]查询语句
 			mData.aBuildParam = new Array<any>();
@@ -89,26 +105,26 @@ export function SQL() {
 			mData.sBuildSql = aSql.join(' ');
 			return oSql;
 		},
-		buildInsert(mValue: Record<string, string | number>) {
+		buildInsert() {
 			// 构建[INSERT]SQL语句
-			const columns = Array.from(Object.keys(mValue)).join(', ');
-			const placeholders = Array.from(Object.keys(mValue))
+			if (mData.mSet === undefined) {
+				throw new Error('mSet不能为空');
+			}
+			const columns = Array.from(Object.keys(mData.mSet)).join(', ');
+			const placeholders = Array.from(Object.keys(mData.mSet))
 				.map(() => '?')
 				.join(', ');
 			mData.sBuildSql = `INSERT INTO ${mData.sFrom} (${columns}) VALUES (${placeholders})`;
-			mData.aBuildParam = Array.from(Object.values(mValue));
+			mData.aBuildParam = Array.from(Object.values(mData.mSet));
 			return oSql;
 		},
-		buildUpdate(mSet: Record<string, string | number>) {
+		buildUpdate() {
 			// 构建[UPDATE]SQL语句
-			if (mSet.length === 0) {
-				throw new Error('mSet不能为空');
-			}
 			mData.aBuildParam = new Array<any>();
 			const updateSets: string[] = [];
-			for (const k in mSet) {
+			for (const k in mData.mSet) {
 				updateSets.push(`${k}=?`);
-				mData.aBuildParam.push(mSet[k]);
+				mData.aBuildParam.push(mData.mSet[k]);
 			}
 			const aSql: string[] = [];
 			aSql.push(`UPDATE ${mData.sFrom} SET ${updateSets.join(',')}`);
@@ -116,21 +132,21 @@ export function SQL() {
 			mData.sBuildSql = aSql.join(' ');
 			return oSql;
 		},
-		buildUpsert(mConflict: Record<string, string | number>, mSet: Record<string, string | number>) {
+		buildUpsert() {
 			// 构建[INSERT]SQL语句
 			const columns: string[] = [];
 			const conflict: string[] = [];
 			const updateSets: string[] = [];
 			const mValue: Record<string, string | number> = {};
-			for (const k in mConflict) {
+			for (const k in mData.mConflict) {
 				columns.push(`${k}`);
 				conflict.push(`${k}`);
-				mValue[k] = mConflict[k];
+				mValue[k] = mData.mConflict[k];
 			}
-			for (const k in mSet) {
+			for (const k in mData.mSet) {
 				columns.push(`${k}`);
 				updateSets.push(`${k}=excluded.${k}`);
-				mValue[k] = mSet[k];
+				mValue[k] = mData.mSet[k];
 			}
 			const placeholders = Array.from(Object.keys(columns))
 				.map(() => '?')
