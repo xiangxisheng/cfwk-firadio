@@ -3,6 +3,7 @@
   "version": "2024.8.16",
   "private": true,
   "scripts": {
+    "build": "esbuild --bundle --outfile=./build/server.js --platform=node ./src/server.ts",
     "deploy": "wrangler deploy",
     "dev": "wrangler dev",
     "start": "wrangler dev",
@@ -18,10 +19,12 @@
     "wrangler": "^3.72.0"
   },
   "dependencies": {
+    "@hono/node-server": "^1.12.1",
     "@prisma/adapter-d1": "^5.17.0",
     "@prisma/client": "^5.17.0",
     "hono": "^4.5.1",
     "mimetext": "^3.0.24",
-    "postal-mime": "^2.2.6"
+    "postal-mime": "^2.2.6",
+    "sqlite3": "^5.1.7"
   }
 }

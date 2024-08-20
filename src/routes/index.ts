@@ -41,7 +41,7 @@ app.use('*', async (c, next) => {
 				.buildSelect();
 			//console.log('执行的SQL语句', oCFD1.getSQL(oSqlConfig));
 			const rConfig = await oCFD1.first(oSqlConfig);
-			if (rConfig === null) {
+			if (!rConfig) {
 				return {};
 			}
 			config_cache[name] = JSON.parse(rConfig['value'] as string) as Record<string, ISettingValue>;
