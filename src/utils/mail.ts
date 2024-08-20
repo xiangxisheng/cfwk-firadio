@@ -1,16 +1,19 @@
-import { EmailMessage } from 'cloudflare:email';
-//import { createMimeMessage, MIMEMessage } from 'mimetext';
-class MIMEMessage {
-	setSender(opt: Record<string, string>) {}
-	setRecipient(opt: string) {}
-	setSubject(opt: string) {}
-	addMessage(opt: Record<string, string>) {}
-	asRaw() {
-		return '';
+//import { EmailMessage } from 'cloudflare:email';
+async function cloudflare_email() {
+	try {
+		return await import('cloudflare:email');
+	} catch (e) {
+		throw new Error('cloudflare:email module not found, this function for cloudflare worker only');
 	}
 }
-function createMimeMessage() {
-	return new MIMEMessage();
+//import { createMimeMessage, MIMEMessage } from 'mimetext';
+async function mimetext() {
+	try {
+		const moduleName = 'mimetext';
+		return await import(moduleName);
+	} catch (e) {
+		throw new Error('mimetext module not found, please add "node_compat = true" to wrangler.toml file');
+	}
 }
 
 export class SendEmail {
@@ -23,39 +26,62 @@ export class SendEmail {
 	await mail.send();
 	//*/
 	env: Env;
-	msg: MIMEMessage;
+	actions: Array<[string, Array<any>]> = [];
 	mail_from: string = '';
 	mail_to: string = '';
 
 	constructor(env: Env) {
 		this.env = env;
-		this.msg = createMimeMessage();
 	}
 
 	setSender(addr: string, name: string = '') {
 		this.mail_from = addr;
 		if (name === '') {
-			this.msg.setSender({ addr });
+			this.actions.push(['setSender', [{ addr }]]);
 			return;
 		}
-		this.msg.setSender({ name, addr });
+		this.actions.push(['setSender', [{ name, addr }]]);
 	}
 
 	setRecipient(_mail_to: string) {
 		this.mail_to = _mail_to;
-		this.msg.setRecipient(_mail_to);
+		this.actions.push(['setRecipient', [_mail_to]]);
 	}
 
 	addTextPlain(_subject: string, _msg_data: string) {
-		this.msg.setSubject(_subject);
-		this.msg.addMessage({
-			contentType: 'text/plain',
-			data: _msg_data,
-		});
+		this.actions.push(['setSubject', [_subject]]);
+		this.actions.push([
+			'addMessage',
+			[
+				{
+					contentType: 'text/plain',
+					data: _msg_data,
+				},
+			],
+		]);
 	}
 
-	send() {
-		const message = new EmailMessage(this.mail_from, this.mail_to, this.msg.asRaw());
+	async send() {
+		const { createMimeMessage } = await mimetext();
+		const msg = createMimeMessage();
+		for (const action of this.actions) {
+			switch (action[0]) {
+				case 'setSender':
+					msg.setSender(action[1][0]);
+					break;
+				case 'setRecipient':
+					msg.setRecipient(action[1][0]);
+					break;
+				case 'setSubject':
+					msg.setSubject(action[1][0]);
+					break;
+				case 'addMessage':
+					msg.addMessage(action[1][0]);
+					break;
+			}
+		}
+		const { EmailMessage } = await cloudflare_email();
+		const message = new EmailMessage(this.mail_from, this.mail_to, msg.asRaw());
 		return this.env.SEB.send(message);
 	}
 }

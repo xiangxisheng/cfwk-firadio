@@ -6,15 +6,22 @@ import { Buffer } from 'node:buffer';
 
 // 邮件回复功能中需要创建邮件
 //import { createMimeMessage } from "mimetext";
-function createMimeMessage() {
+async function mimetext() {
 	try {
-		const a = 'mimetext';
-		return require(a).createMimeMessage;
+		const moduleName = 'mimetext';
+		return await import(moduleName);
 	} catch (e) {
-		return null;
+		throw new Error('mimetext module not found, please add "node_compat = true" to wrangler.toml file');
 	}
 }
-import { EmailMessage } from 'cloudflare:email';
+//import { EmailMessage } from 'cloudflare:email';
+async function cloudflare_email() {
+	try {
+		return await import('cloudflare:email');
+	} catch (e) {
+		throw new Error('cloudflare:email module not found, this function for cloudflare worker only');
+	}
+}
 
 // 解析收到的邮件
 import PostalMime from 'postal-mime';
@@ -91,7 +98,7 @@ function extractDomain(email: string) {
 	return email.substring(email.lastIndexOf('@') + 1);
 }
 
-function getReplyMessage(
+async function getReplyMessage(
 	MessageID: string,
 	email_from: string,
 	email_to: string,
@@ -100,6 +107,7 @@ function getReplyMessage(
 	replyText: string
 ) {
 	// 邮件回复功能
+	const { createMimeMessage } = await mimetext();
 	const msg = createMimeMessage();
 	if (!msg) {
 		return null;
@@ -113,6 +121,7 @@ function getReplyMessage(
 		data: replyText,
 	});
 
+	const { EmailMessage } = await cloudflare_email();
 	const replyMessage = new EmailMessage(email_to, email_from, msg.asRaw());
 
 	return replyMessage;
@@ -169,7 +178,7 @@ export default async (message: ForwardableEmailMessage, env: Env, ctx: Execution
 		console.log('没有[MessageID]则无需回复');
 		return;
 	}
-	const replyMessage = getReplyMessage(
+	const replyMessage = await getReplyMessage(
 		MessageID,
 		message.from,
 		message.to,
