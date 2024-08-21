@@ -30,12 +30,15 @@ export class CFD1 {
 		return await this.bindSqlParam(oSql).first();
 	}
 	async begin() {
-		this.DB.exec('BEGIN TRANSACTION');
+		// 开始事务处理
+		return await this.DB.exec('BEGIN TRANSACTION');
 	}
 	async commit() {
+		// 提交事务处理
 		return await this.DB.exec('COMMIT');
 	}
 	async rollback() {
+		// 回滚事务处理
 		return await this.DB.exec('ROLLBACK');
 	}
 }

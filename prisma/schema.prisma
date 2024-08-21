@@ -79,8 +79,24 @@ model pre_bee_logs {
   action        String
   oldvalue      String?
   newvalue      String?
-  changeby      Int?
+  changeby      String?
   date          DateTime
   requestnumber String?
   remark        String?
+  processed     Int      @default(0)
+
+  @@index([processed])
+}
+
+model pre_bee_customer_date {
+  id         Int     @id
+  customerid String
+  by_date    String
+  status     String  @default("active") //是否已停网
+  ip_pcs     Int     @default(0) //IP数量
+  bandwidth  Int? //带宽
+  ipservice  String?
+  package    String?
+
+  @@unique([customerid, by_date])
 }

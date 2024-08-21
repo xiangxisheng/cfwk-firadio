@@ -2,10 +2,11 @@ import { Route } from '@/utils/route';
 import { CFD1 } from '@/utils/cfd1';
 import { cJson } from '@/utils/vben';
 import { ApiBee } from '@/utils/api/bee';
+import { CustomerDate } from '@/utils/bee/customer_date';
 
 const app = Route();
 
-app.get('/', async (c) => {
+app.get('/fetch_logs', async (c) => {
 	const oCFD1 = new CFD1(c.env.DB);
 	const oSqlSelect = oCFD1
 		.sql()
@@ -42,6 +43,16 @@ app.get('/', async (c) => {
 		}
 		await oCFD1.commit();
 	}
+	const result = {};
+	return cJson(c, { code: 0, type: 'success', message: 'ok', result });
+});
+
+app.get('/', async (c) => {
+	const oCFD1 = new CFD1(c.env.DB);
+	const customerDate = new CustomerDate(oCFD1);
+	await oCFD1.begin();
+	await customerDate.start();
+	await oCFD1.commit();
 	const result = {};
 	return cJson(c, { code: 0, type: 'success', message: 'ok', result });
 });

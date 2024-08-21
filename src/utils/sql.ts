@@ -6,7 +6,7 @@ interface SqlParam {
 	isLock: Boolean;
 	iLimit?: Number;
 	iOffset?: Number;
-	mSet?: Record<string, string | number>;
+	mSet?: Record<string, string | number | undefined | null>;
 	mConflict?: Record<string, string | number>;
 	sBuildSql?: string;
 	aBuildParam: Array<any>;
@@ -65,7 +65,7 @@ export function SQL() {
 			mData.isLock = true;
 			return oSql;
 		},
-		set(mSet: Record<string, string | number>) {
+		set(mSet: Record<string, string | number | undefined | null>) {
 			if (mSet.length === 0) {
 				throw new Error('mSet不能为空');
 			}
@@ -131,8 +131,16 @@ export function SQL() {
 			mData.aBuildParam = new Array<any>();
 			const updateSets: string[] = [];
 			for (const k in mData.mSet) {
-				updateSets.push(`${quoteSQLName(k)}=?`);
-				mData.aBuildParam.push(mData.mSet[k]);
+				const v = mData.mSet[k];
+				if (v === undefined) {
+					continue;
+				}
+				if (v === null) {
+					updateSets.push(`${quoteSQLName(k)}=NULL`);
+				} else {
+					updateSets.push(`${quoteSQLName(k)}=?`);
+					mData.aBuildParam.push(v);
+				}
 			}
 			const aSql: string[] = [];
 			aSql.push(`UPDATE ${mData.sFrom} SET ${updateSets.join(',')}`);
@@ -145,24 +153,33 @@ export function SQL() {
 			const columns: string[] = [];
 			const conflict: string[] = [];
 			const updateSets: string[] = [];
-			const mValue: Record<string, string | number> = {};
+			const aValue: Array<string | number> = [];
+			const aPlaceholders: Array<string> = [];
 			for (const k in mData.mConflict) {
 				columns.push(`${quoteSQLName(k)}`);
+				aPlaceholders.push('?');
 				conflict.push(`${quoteSQLName(k)}`);
-				mValue[k] = mData.mConflict[k];
+				aValue.push(mData.mConflict[k]);
 			}
 			for (const k in mData.mSet) {
+				const v = mData.mSet[k];
+				if (v === undefined) {
+					continue;
+				}
 				columns.push(`${k}`);
-				updateSets.push(`${k}=excluded.${k}`);
-				mValue[k] = mData.mSet[k];
+				updateSets.push(`${quoteSQLName(k)}=excluded.${quoteSQLName(k)}`);
+				if (v === null) {
+					aPlaceholders.push('NULL');
+				} else {
+					aValue.push(v);
+					aPlaceholders.push('?');
+				}
 			}
-			const placeholders = Array.from(Object.keys(columns))
-				.map(() => '?')
-				.join(',');
+			const placeholders = aPlaceholders.join(',');
 			mData.sBuildSql = `INSERT INTO ${mData.sFrom}(${columns.join(',')})VALUES(${placeholders})ON CONFLICT(${conflict.join(
 				','
 			)}) DO UPDATE SET ${updateSets.join(',')}`;
-			mData.aBuildParam = Array.from(Object.values(mValue));
+			mData.aBuildParam = aValue;
 			return oSql;
 		},
 		getSQL() {
