@@ -87,6 +87,16 @@ export class D1Database {
 			process.exit();
 		});
 	}
+	exec(query: string) {
+		return new Promise((resolve, reject) => {
+			this.db.all(query, (err, row) => {
+				if (err) {
+					return reject(err);
+				}
+				resolve(row);
+			});
+		});
+	}
 	prepare(query: string) {
 		return new D1PreparedStatement(this.db, query);
 	}

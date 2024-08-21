@@ -29,4 +29,13 @@ export class CFD1 {
 		// 获取一条
 		return await this.bindSqlParam(oSql).first();
 	}
+	async begin() {
+		this.DB.exec('BEGIN TRANSACTION');
+	}
+	async commit() {
+		return await this.DB.exec('COMMIT');
+	}
+	async rollback() {
+		return await this.DB.exec('ROLLBACK');
+	}
 }

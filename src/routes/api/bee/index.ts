@@ -22,6 +22,7 @@ app.get('/', async (c) => {
 	const apiBee = new ApiBee();
 	const res = await apiBee.customerGetAllLog(log_id_begin);
 	if (res.data) {
+		await oCFD1.begin();
 		for (const log of res.data.logs) {
 			const record = {
 				no: log['no'],
@@ -39,6 +40,7 @@ app.get('/', async (c) => {
 			if (r2.success) {
 			}
 		}
+		await oCFD1.commit();
 	}
 	const result = {};
 	return cJson(c, { code: 0, type: 'success', message: 'ok', result });
