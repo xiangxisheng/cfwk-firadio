@@ -3,7 +3,7 @@ import { CFD1 } from '@/utils/cfd1';
 class CustomerDateInfo {
 	customerid: string;
 	by_date: string;
-	status: string;
+	status?: string;
 	ip_pcs: number;
 	bandwidth?: number;
 	ipservice?: string;
@@ -11,9 +11,9 @@ class CustomerDateInfo {
 	constructor(record: Record<string, unknown>) {
 		this.customerid = record['customerid']?.toString() ?? '';
 		this.by_date = record['by_date']?.toString() ?? '';
-		this.status = record['status']?.toString() ?? 'active';
+		this.status = record['status']?.toString();
 		this.ip_pcs = Number(record['ip_pcs'] ?? 0);
-		this.bandwidth = Number(record['bandwidth']);
+		this.bandwidth = record['bandwidth'] ? Number(record['bandwidth']) : undefined;
 		this.ipservice = record['ipservice']?.toString();
 		this.package = record['package']?.toString();
 	}
@@ -72,7 +72,130 @@ export class CustomerDate {
 		await this.oCFD1.all(oSqlUpsert);
 	}
 
-	public async start(limit = 100) {
+	private async getCustomerDateInfo(logRow: Record<string, unknown>): Promise<CustomerDateInfo | null> {
+		if (!logRow['customerid'] || !logRow['date'] || !logRow['action']) {
+			return null;
+		}
+		const customerid = logRow['customerid'].toString();
+		const date = logRow['date'].toString().split(' ')[0];
+		const action = logRow['action'].toString();
+		const oldvalue = logRow['oldvalue']?.toString();
+		const newvalue = logRow['newvalue']?.toString();
+		const customerDateInfo = await this.getCustomerDate(customerid, date);
+		switch (action) {
+			case 'Added New Customer':
+				customerDateInfo.status = 'new';
+				return customerDateInfo;
+				break;
+			case 'Changed Status':
+				if (oldvalue) {
+					const oSqlUpdate = this.oCFD1
+						.sql()
+						.from('pre_bee_customer_date')
+						.set({ status: oldvalue })
+						.where([
+							['[customerid]=?', [customerid]],
+							['[status]IS NULL', []],
+						])
+						.buildUpdate();
+					await this.oCFD1.all(oSqlUpdate);
+				}
+				if (newvalue) {
+					customerDateInfo.status = newvalue;
+				}
+				return customerDateInfo;
+				break;
+			case 'Assigned IP Address':
+				customerDateInfo.ip_pcs++;
+				return customerDateInfo;
+				break;
+			case 'Removed IP Address':
+				customerDateInfo.ip_pcs--;
+				return customerDateInfo;
+				break;
+			case 'Changed Download Speed':
+				// 先把之前没有bandwidth参数的用oldvalue更新上去
+				const bandwidth_oldvalue = Number(oldvalue?.match(/\d+/)?.[0]);
+				if (bandwidth_oldvalue) {
+					const oSqlUpdate = this.oCFD1
+						.sql()
+						.from('pre_bee_customer_date')
+						.set({ bandwidth: bandwidth_oldvalue })
+						.where([
+							['[customerid]=?', [customerid]],
+							['[bandwidth]IS NULL', []],
+						])
+						.buildUpdate();
+					//console.log('SQL语句', this.oCFD1.getSQL(oSqlUpdate));
+					await this.oCFD1.all(oSqlUpdate);
+				}
+				if (newvalue) {
+					customerDateInfo.bandwidth = Number(newvalue.match(/\d+/)?.[0]);
+				}
+				return customerDateInfo;
+				break;
+			case 'Changed IP Service':
+				if (oldvalue) {
+					const oSqlUpdate = this.oCFD1
+						.sql()
+						.from('pre_bee_customer_date')
+						.set({ ipservice: oldvalue })
+						.where([
+							['[customerid]=?', [customerid]],
+							['[ipservice]IS NULL', []],
+						])
+						.buildUpdate();
+					await this.oCFD1.all(oSqlUpdate);
+				}
+				if (newvalue) {
+					customerDateInfo.ipservice = newvalue;
+				}
+				return customerDateInfo;
+				break;
+			case 'Changed Package':
+				if (oldvalue) {
+					const oSqlUpdate = this.oCFD1
+						.sql()
+						.from('pre_bee_customer_date')
+						.set({ package: oldvalue })
+						.where([
+							['[customerid]=?', [customerid]],
+							['[package]IS NULL', []],
+						])
+						.buildUpdate();
+					await this.oCFD1.all(oSqlUpdate);
+				}
+				if (newvalue) {
+					customerDateInfo.package = newvalue;
+				}
+				return customerDateInfo;
+				break;
+			case 'change network address':
+			case 'change loginname':
+			case 'change username':
+			case 'Changed ISP':
+			case 'Changed VLAN':
+			case 'Changed Customer Name':
+			case 'Changed Upload Speed':
+			case 'Changed IP Address':
+			case 'Changed Router':
+			case 'Changed Port':
+			case 'Changed Serial Number':
+			case 'Changed ONT ID':
+			case 'Changed Switch':
+			case 'Changed Customer Name (CN)':
+			case 'Finished Testing (3 Days)':
+			case '+ Assigned IP(s)':
+			case '- Removed IP(s)':
+				return null;
+				break;
+			default:
+				throw new Error(`无法处理[action=${action}]`);
+		}
+	}
+
+	public async start(limit = 10000) {
+		var count = 0;
 		const oSqlSelect = this.oCFD1
 			.sql()
 			.from('pre_bee_logs')
@@ -87,42 +210,10 @@ export class CustomerDate {
 				continue;
 			}
 			const logRowId = Number(logRow['id']);
-			const customerid = logRow['customerid'].toString();
-			const date = logRow['date'].toString().split(' ')[0];
-			const action = logRow['action'].toString();
-			const oldvalue = logRow['oldvalue']?.toString();
-			const newvalue = logRow['newvalue']?.toString();
-			const customerDateInfo = await this.getCustomerDate(customerid, date);
-			switch (action) {
-				case 'Added New Customer':
-					customerDateInfo.status = 'active';
-					break;
-				case 'Changed Status':
-					if (newvalue) {
-						customerDateInfo.status = newvalue;
-					}
-					break;
-				case 'Assigned IP Address':
-					customerDateInfo.ip_pcs++;
-					break;
-				case 'Removed IP Address':
-					customerDateInfo.ip_pcs--;
-					break;
-				case 'Changed Download Speed':
-					customerDateInfo.bandwidth = Number(newvalue);
-					break;
-				case 'Changed IP Service':
-					if (newvalue) {
-						customerDateInfo.ipservice = newvalue;
-					}
-					break;
-				case 'Changed Package':
-					if (newvalue) {
-						customerDateInfo.package = newvalue;
-					}
-					break;
+			const customerDateInfo = await this.getCustomerDateInfo(logRow);
+			if (customerDateInfo) {
+				this.saveCustomerDate(customerDateInfo);
 			}
-			this.saveCustomerDate(customerDateInfo);
 			const oSqlUpdate = this.oCFD1
 				.sql()
 				.from('pre_bee_logs')
@@ -130,6 +221,8 @@ export class CustomerDate {
 				.where([['[no]=?', [logRowId]]])
 				.buildUpdate();
 			await this.oCFD1.all(oSqlUpdate);
+			count++;
 		}
+		return count;
 	}
 }

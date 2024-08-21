@@ -17,6 +17,7 @@ app.get('/fetch_logs', async (c) => {
 	//console.log('执行的SQL语句', oCFD1.getSQL(oSqlSelect));
 	const record = await oCFD1.first(oSqlSelect);
 	var log_id_begin = 189154; //8月份的第一条
+	log_id_begin = 5897;
 	if (record) {
 		log_id_begin = Number(record['no']) + 1;
 	}
@@ -47,13 +48,15 @@ app.get('/fetch_logs', async (c) => {
 	return cJson(c, { code: 0, type: 'success', message: 'ok', result });
 });
 
-app.get('/', async (c) => {
+app.get('/put_customer_date', async (c) => {
 	const oCFD1 = new CFD1(c.env.DB);
 	const customerDate = new CustomerDate(oCFD1);
 	await oCFD1.begin();
-	await customerDate.start();
+	const count = await customerDate.start();
 	await oCFD1.commit();
-	const result = {};
+	const result = {
+		count,
+	};
 	return cJson(c, { code: 0, type: 'success', message: 'ok', result });
 });
 

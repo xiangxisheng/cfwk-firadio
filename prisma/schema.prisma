@@ -92,9 +92,9 @@ model pre_bee_customer_date {
   id         Int     @id
   customerid String
   by_date    String
-  status     String  @default("active") //是否已停网
-  ip_pcs     Int     @default(0) //IP数量
-  bandwidth  Int? //带宽
+  status     String? // 状态
+  ip_pcs     Int     @default(0) // IP数量
+  bandwidth  Int? // 带宽
   ipservice  String?
   package    String?
 
