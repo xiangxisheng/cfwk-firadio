@@ -1,4 +1,3 @@
-
 interface Meta {
 	currentActiveMenu?: string;
 	frameSrc?: string;
@@ -9,14 +8,19 @@ interface Meta {
 	ignoreKeepAlive?: boolean;
 	showMenu?: boolean;
 	title: string;
+	roles?: string[];
 }
 
 interface Menu {
+	createTime?: string;
+	icon?: string;
+	menuName?: string;
+	orderNo?: number;
 	path: string;
 	name: string;
 	component: string;
 	redirect?: string;
-	meta: Meta;
+	meta?: Meta;
 	children?: Array<Menu>;
 }
 
@@ -29,6 +33,10 @@ export function menu_from_list_to_tree(_aRecords: Record<string, unknown>[], par
 	const root = Array<Menu>();
 	for (const record of aRecords) {
 		const menu: Menu = {
+			createTime: record['createTime']?.toString(),
+			icon: record['icon']?.toString(),
+			menuName: record['menuName']?.toString(),
+			orderNo: record['orderNo'] as number,
 			path: record['path']?.toString() ?? '',
 			name: record['name']?.toString() ?? '',
 			component: record['component']?.toString() ?? '',
