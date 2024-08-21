@@ -1,20 +1,21 @@
 interface SqlParam {
 	mSelect?: Record<string, string>;
-	sFrom?: String;
+	sFrom: string;
 	aWhere?: Array<[string, any]>;
-	aOrderBy?: Array<string>;
+	aOrderBy?: Array<[string, string]>;
 	isLock: Boolean;
 	iLimit?: Number;
 	iOffset?: Number;
 	mSet?: Record<string, string | number>;
 	mConflict?: Record<string, string | number>;
-	sBuildSql?: String;
+	sBuildSql?: string;
 	aBuildParam: Array<any>;
 }
 
 export function SQL() {
 	//取得sql实例
 	const mData: SqlParam = {
+		sFrom: '',
 		isLock: false,
 		aBuildParam: new Array<any>(),
 	};
@@ -32,6 +33,9 @@ export function SQL() {
 			}
 		}
 	};
+	const quoteSQLName = (field: string): string => {
+		return '[' + field + ']';
+	};
 	const oSql = {
 		from(sFrom: string) {
 			mData.sFrom = sFrom;
@@ -45,7 +49,7 @@ export function SQL() {
 			mData.aWhere = aWhere;
 			return oSql;
 		},
-		orderBy(aOrderBy: string[]) {
+		orderBy(aOrderBy: Array<[string, string]>) {
 			mData.aOrderBy = aOrderBy;
 			return oSql;
 		},
@@ -91,7 +95,11 @@ export function SQL() {
 			aSql.push(`FROM ${mData.sFrom}`);
 			putWhere(aSql);
 			if (mData.aOrderBy !== undefined) {
-				aSql.push(`ORDER BY ${mData.aOrderBy.join(',')}`);
+				const aOrderBy = new Array<string>();
+				for (const o of mData.aOrderBy) {
+					aOrderBy.push(`${quoteSQLName(o[0])} ${o[1]}`);
+				}
+				aSql.push(`ORDER BY ${aOrderBy.join(',')}`);
 			}
 			if (mData.iLimit !== undefined) {
 				aSql.push(`LIMIT ${mData.iLimit}`);
@@ -110,11 +118,11 @@ export function SQL() {
 			if (mData.mSet === undefined) {
 				throw new Error('mSet不能为空');
 			}
-			const columns = Array.from(Object.keys(mData.mSet)).join(', ');
+			const columns = Object.keys(mData.mSet).map(quoteSQLName).join(', ');
 			const placeholders = Array.from(Object.keys(mData.mSet))
 				.map(() => '?')
 				.join(', ');
-			mData.sBuildSql = `INSERT INTO ${mData.sFrom} (${columns}) VALUES (${placeholders})`;
+			mData.sBuildSql = `INSERT INTO ${quoteSQLName(mData.sFrom)} (${columns}) VALUES (${placeholders})`;
 			mData.aBuildParam = Array.from(Object.values(mData.mSet));
 			return oSql;
 		},
@@ -123,7 +131,7 @@ export function SQL() {
 			mData.aBuildParam = new Array<any>();
 			const updateSets: string[] = [];
 			for (const k in mData.mSet) {
-				updateSets.push(`${k}=?`);
+				updateSets.push(`${quoteSQLName(k)}=?`);
 				mData.aBuildParam.push(mData.mSet[k]);
 			}
 			const aSql: string[] = [];
@@ -139,8 +147,8 @@ export function SQL() {
 			const updateSets: string[] = [];
 			const mValue: Record<string, string | number> = {};
 			for (const k in mData.mConflict) {
-				columns.push(`${k}`);
-				conflict.push(`${k}`);
+				columns.push(`${quoteSQLName(k)}`);
+				conflict.push(`${quoteSQLName(k)}`);
 				mValue[k] = mData.mConflict[k];
 			}
 			for (const k in mData.mSet) {

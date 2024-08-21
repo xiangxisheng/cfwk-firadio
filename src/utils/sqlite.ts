@@ -42,6 +42,7 @@ export class D1PreparedStatement {
 				}
 				resolve(row);
 			});
+			stmt.finalize();
 		});
 	}
 	private fetchAll() {
@@ -56,6 +57,7 @@ export class D1PreparedStatement {
 				}
 				resolve(row);
 			});
+			stmt.finalize();
 		});
 	}
 	async all<T = Record<string, unknown>>(): Promise<D1Result<T>> {
@@ -79,13 +81,16 @@ export class D1PreparedStatement {
 export class D1Database {
 	private db: sqlite3.Database;
 	constructor(filename: string) {
-		this.db = new sqlite3.Database(filename);
+		this.db = new (sqlite3.verbose().Database)(filename);
 		this.db.on('error', (error) => {
-			console.error(error);
+			console.error('[OpenDB]', error);
 			process.exit();
 		});
 	}
 	prepare(query: string) {
 		return new D1PreparedStatement(this.db, query);
+	}
+	close() {
+		this.db.close();
 	}
 }

@@ -25,7 +25,7 @@ app.get('/', async (c) => {
 	const oSql = oCFD1.sql();
 	oSql.select(select);
 	oSql.from('mails');
-	oSql.orderBy(['id DESC']);
+	oSql.orderBy([['id', 'DESC']]);
 	oSql.offset(Number(c.req.query('offset') || 0));
 	oSql.limit(Number(c.req.query('limit') || 10));
 	oSql.buildSelect();

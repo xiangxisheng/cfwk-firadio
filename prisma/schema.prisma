@@ -72,3 +72,15 @@ model pre_system_sessions {
 
   @@index([user_id])
 }
+
+model pre_bee_logs {
+  no            Int      @id
+  customerid    String
+  action        String
+  oldvalue      String?
+  newvalue      String?
+  changeby      Int?
+  date          DateTime
+  requestnumber String?
+  remark        String?
+}

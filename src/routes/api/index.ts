@@ -38,6 +38,7 @@ app.use('*', async (c: any, next) => {
 });
 
 app.route('/console', require('./console').default);
+app.route('/bee', require('./bee').default);
 app.route('/bkatm', require('./bkatm').default);
 
 app.get('/', (c) => {

@@ -25,7 +25,12 @@ app.get('/getMenuList', async (c) => {
 		redirect: 'redirect',
 		meta: 'meta',
 	};
-	const oSql = oCFD1.sql().select(select).from('pre_system_menus').orderBy(['orderNo']).buildSelect();
+	const oSql = oCFD1
+		.sql()
+		.select(select)
+		.from('pre_system_menus')
+		.orderBy([['orderNo', 'ASC']])
+		.buildSelect();
 	const results = (await oCFD1.all(oSql)).results;
 	for (const mRow of results) {
 		//mRow['createTime'] = new Date(mRow['created'] as number).toString();

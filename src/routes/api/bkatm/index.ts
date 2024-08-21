@@ -315,7 +315,7 @@ app.get('/getMenuList', async (c) => {
 		.select(select)
 		.from('pre_system_menus')
 		.where([['type IN(0,1)', []]])
-		.orderBy(['orderNo'])
+		.orderBy([['orderNo', 'ASC']])
 		.buildSelect();
 	const results = (await oCFD1.all(oSql)).results;
 	for (const mRow of results) {
