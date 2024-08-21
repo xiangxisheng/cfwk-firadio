@@ -89,7 +89,7 @@ export class CustomerDate {
 				return null;
 			case 'Added New Customer'.toLowerCase():
 				// 1：新增客户
-				customerDateInfo.status = 'new';
+				customerDateInfo.status = 'active';
 				return customerDateInfo;
 			case 'Allowed Testing'.toLowerCase():
 				return null;
