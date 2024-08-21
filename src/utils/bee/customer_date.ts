@@ -82,41 +82,44 @@ export class CustomerDate {
 		const oldvalue = logRow['oldvalue']?.toString();
 		const newvalue = logRow['newvalue']?.toString();
 		const customerDateInfo = await this.getCustomerDate(customerid, date);
-		switch (action) {
-			case 'Added New Customer':
+		switch (action.toLowerCase()) {
+			case '- Removed IP(s)'.toLowerCase():
+				return null;
+			case '+ Assigned IP(s)'.toLowerCase():
+				return null;
+			case 'Added New Customer'.toLowerCase():
+				// 1：新增客户
 				customerDateInfo.status = 'new';
 				return customerDateInfo;
-				break;
-			case 'Changed Status':
-				if (oldvalue) {
-					const oSqlUpdate = this.oCFD1
-						.sql()
-						.from('pre_bee_customer_date')
-						.set({ status: oldvalue })
-						.where([
-							['[customerid]=?', [customerid]],
-							['[status]IS NULL', []],
-						])
-						.buildUpdate();
-					await this.oCFD1.all(oSqlUpdate);
-				}
-				if (newvalue) {
-					customerDateInfo.status = newvalue;
-				}
-				return customerDateInfo;
-				break;
-			case 'Assigned IP Address':
+			case 'Allowed Testing'.toLowerCase():
+				return null;
+			case 'Assigned IP Address'.toLowerCase():
+				// 2：附加IP
 				customerDateInfo.ip_pcs++;
 				return customerDateInfo;
-				break;
-			case 'Removed IP Address':
-				customerDateInfo.ip_pcs--;
-				return customerDateInfo;
-				break;
-			case 'Changed Download Speed':
-				// 先把之前没有bandwidth参数的用oldvalue更新上去
+			case 'Change Customer ID'.toLowerCase():
+				return null;
+			case 'Change Location'.toLowerCase():
+				return null;
+			case 'change loginname'.toLowerCase():
+				return null;
+			case 'change network address'.toLowerCase():
+				return null;
+			case 'Change Test Status'.toLowerCase():
+				return null;
+			case 'change username'.toLowerCase():
+				return null;
+			case 'Changed Active Date'.toLowerCase():
+				return null;
+			case 'Changed Customer Name'.toLowerCase():
+				return null;
+			case 'Changed Customer Name (CN)'.toLowerCase():
+				return null;
+			case 'Changed Download Speed'.toLowerCase():
+				// 3：修改下行速度
 				const bandwidth_oldvalue = Number(oldvalue?.match(/\d+/)?.[0]);
 				if (bandwidth_oldvalue) {
+					// 先把之前没有bandwidth参数的用oldvalue更新上去
 					const oSqlUpdate = this.oCFD1
 						.sql()
 						.from('pre_bee_customer_date')
@@ -133,8 +136,12 @@ export class CustomerDate {
 					customerDateInfo.bandwidth = Number(newvalue.match(/\d+/)?.[0]);
 				}
 				return customerDateInfo;
-				break;
-			case 'Changed IP Service':
+			case 'Changed Graph ID'.toLowerCase():
+				return null;
+			case 'Changed IP Address'.toLowerCase():
+				return null;
+			case 'Changed IP Service'.toLowerCase():
+				// 4：修改IP服务
 				if (oldvalue) {
 					const oSqlUpdate = this.oCFD1
 						.sql()
@@ -151,8 +158,14 @@ export class CustomerDate {
 					customerDateInfo.ipservice = newvalue;
 				}
 				return customerDateInfo;
-				break;
-			case 'Changed Package':
+			case 'Changed IP Service Location'.toLowerCase():
+				return null;
+			case 'Changed ISP'.toLowerCase():
+				return null;
+			case 'Changed ONT ID'.toLowerCase():
+				return null;
+			case 'Changed Package'.toLowerCase():
+				// 5：修改网络类型
 				if (oldvalue) {
 					const oSqlUpdate = this.oCFD1
 						.sql()
@@ -169,26 +182,80 @@ export class CustomerDate {
 					customerDateInfo.package = newvalue;
 				}
 				return customerDateInfo;
-				break;
-			case 'change network address':
-			case 'change loginname':
-			case 'change username':
-			case 'Changed ISP':
-			case 'Changed VLAN':
-			case 'Changed Customer Name':
-			case 'Changed Upload Speed':
-			case 'Changed IP Address':
-			case 'Changed Router':
-			case 'Changed Port':
-			case 'Changed Serial Number':
-			case 'Changed ONT ID':
-			case 'Changed Switch':
-			case 'Changed Customer Name (CN)':
-			case 'Finished Testing (3 Days)':
-			case '+ Assigned IP(s)':
-			case '- Removed IP(s)':
+			case 'Changed Port'.toLowerCase():
 				return null;
-				break;
+			case 'Changed Router'.toLowerCase():
+				return null;
+			case 'Changed Serial Number'.toLowerCase():
+				return null;
+			case 'Changed Status'.toLowerCase():
+				// 6：修改网络状态
+				if (oldvalue) {
+					const oSqlUpdate = this.oCFD1
+						.sql()
+						.from('pre_bee_customer_date')
+						.set({ status: oldvalue })
+						.where([
+							['[customerid]=?', [customerid]],
+							['[status]IS NULL', []],
+						])
+						.buildUpdate();
+					await this.oCFD1.all(oSqlUpdate);
+				}
+				if (newvalue) {
+					customerDateInfo.status = newvalue;
+				}
+				return customerDateInfo;
+			case 'Changed Switch'.toLowerCase():
+				return null;
+			case 'Changed Upload Speed'.toLowerCase():
+				return null;
+			case 'Changed VLAN'.toLowerCase():
+				return null;
+			case 'Created New Creditnote'.toLowerCase():
+				return null;
+			case 'Created New invoice'.toLowerCase():
+				return null;
+			case 'Created New Receipt'.toLowerCase():
+				return null;
+			case 'Finished Testing (1 Days)'.toLowerCase():
+				return null;
+			case 'Finished Testing (10 Days)'.toLowerCase():
+				return null;
+			case 'Finished Testing (13 Days)'.toLowerCase():
+				return null;
+			case 'Finished Testing (14 Days)'.toLowerCase():
+				return null;
+			case 'Finished Testing (2 Days)'.toLowerCase():
+				return null;
+			case 'Finished Testing (3 Days)'.toLowerCase():
+				return null;
+			case 'Finished Testing (30 Days)'.toLowerCase():
+				return null;
+			case 'Finished Testing (4 Days)'.toLowerCase():
+				return null;
+			case 'Finished Testing (5 Days)'.toLowerCase():
+				return null;
+			case 'Finished Testing (7 Days)'.toLowerCase():
+				return null;
+			case 'Manual Log'.toLowerCase():
+				return null;
+			case 'P: Added a payment record'.toLowerCase():
+				return null;
+			case 'P: Changed Billing/ Issued Date'.toLowerCase():
+				return null;
+			case 'P: Changed Due Date'.toLowerCase():
+				return null;
+			case 'P: Changed Invoice No'.toLowerCase():
+				return null;
+			case 'P: Changed Paid Date'.toLowerCase():
+				return null;
+			case 'P: Changed Paid Status'.toLowerCase():
+				return null;
+			case 'Removed IP Address'.toLowerCase():
+				// 7：删除附加的IP
+				customerDateInfo.ip_pcs--;
+				return customerDateInfo;
 			default:
 				throw new Error(`无法处理[action=${action}]`);
 		}
