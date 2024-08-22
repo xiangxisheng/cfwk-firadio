@@ -5,8 +5,8 @@ class CustomerDateInfo {
 	by_date: string;
 	status?: string;
 	ip_pcs: number;
-	download?: number;
-	upload?: number;
+	bw_dl_mbps?: number;
+	bw_ul_mbps?: number;
 	ipservice?: string;
 	package?: string;
 	constructor(record: Record<string, unknown>) {
@@ -14,8 +14,8 @@ class CustomerDateInfo {
 		this.by_date = record['by_date']?.toString() ?? '';
 		this.status = record['status']?.toString();
 		this.ip_pcs = Number(record['ip_pcs'] ?? 0);
-		this.download = record['download'] ? Number(record['download']) : undefined;
-		this.upload = record['upload'] ? Number(record['upload']) : undefined;
+		this.bw_dl_mbps = record['bw_dl_mbps'] ? Number(record['bw_dl_mbps']) : undefined;
+		this.bw_ul_mbps = record['bw_ul_mbps'] ? Number(record['bw_ul_mbps']) : undefined;
 		this.ipservice = record['ipservice']?.toString();
 		this.package = record['package']?.toString();
 	}
@@ -23,7 +23,7 @@ class CustomerDateInfo {
 
 export class CustomerDate {
 	private oCFD1: CFD1;
-	private sTableName = 'pre_bee_customer_dates';
+	private sTableName = 'pre_bee_customer_nwsrv_dates';
 
 	constructor(oCFD1: CFD1) {
 		this.oCFD1 = oCFD1;
@@ -33,8 +33,8 @@ export class CustomerDate {
 		const sSelect = {
 			status: 'status',
 			ip_pcs: 'ip_pcs',
-			download: 'download',
-			upload: 'upload',
+			bw_dl_mbps: 'bw_dl_mbps',
+			bw_ul_mbps: 'bw_ul_mbps',
 			ipservice: 'ipservice',
 			package: 'package',
 		};
@@ -72,8 +72,8 @@ export class CustomerDate {
 			.set({
 				status: customerDateInfo.status,
 				ip_pcs: customerDateInfo.ip_pcs,
-				download: customerDateInfo.download,
-				upload: customerDateInfo.upload,
+				bw_dl_mbps: customerDateInfo.bw_dl_mbps,
+				bw_ul_mbps: customerDateInfo.bw_ul_mbps,
 				ipservice: customerDateInfo.ipservice,
 				package: customerDateInfo.package,
 			})
@@ -146,11 +146,11 @@ export class CustomerDate {
 				// 3：修改下行速度
 				const download_oldvalue = Number(oldvalue?.match(/\d+/)?.[0]);
 				if (download_oldvalue) {
-					// 先把之前没有[download]参数的用oldvalue更新上去
-					await this.updateFieldIfNull(customerid, 'download', download_oldvalue);
+					// 先把之前没有[bw_dl_mbps]参数的用oldvalue更新上去
+					await this.updateFieldIfNull(customerid, 'bw_dl_mbps', download_oldvalue);
 				}
 				if (newvalue) {
-					customerDateInfo.download = Number(newvalue.match(/\d+/)?.[0]);
+					customerDateInfo.bw_dl_mbps = Number(newvalue.match(/\d+/)?.[0]);
 				}
 				return customerDateInfo;
 			case 'Changed Graph ID'.toLowerCase():
@@ -199,14 +199,14 @@ export class CustomerDate {
 			case 'Changed Switch'.toLowerCase():
 				return null;
 			case 'Changed Upload Speed'.toLowerCase():
-				// 3：修改下行速度
+				// 7：修改下行速度
 				const upload_oldvalue = Number(oldvalue?.match(/\d+/)?.[0]);
 				if (upload_oldvalue) {
-					// 先把之前没有[upload]参数的用oldvalue更新上去
-					await this.updateFieldIfNull(customerid, 'upload', upload_oldvalue);
+					// 先把之前没有[bw_ul_mbps]参数的用oldvalue更新上去
+					await this.updateFieldIfNull(customerid, 'bw_ul_mbps', upload_oldvalue);
 				}
 				if (newvalue) {
-					customerDateInfo.upload = Number(newvalue.match(/\d+/)?.[0]);
+					customerDateInfo.bw_ul_mbps = Number(newvalue.match(/\d+/)?.[0]);
 				}
 				return null;
 			case 'Changed VLAN'.toLowerCase():
@@ -252,7 +252,7 @@ export class CustomerDate {
 			case 'P: Changed Paid Status'.toLowerCase():
 				return null;
 			case 'Removed IP Address'.toLowerCase():
-				// 7：删除附加的IP
+				// 8：删除附加的IP
 				customerDateInfo.ip_pcs--;
 				return customerDateInfo;
 			default:
@@ -262,11 +262,24 @@ export class CustomerDate {
 
 	public async start(limit = 10000) {
 		var count = 0;
+		const aActions = [
+			'Added New Customer',
+			'Assigned IP Address',
+			'Changed Download Speed',
+			'Changed IP Service',
+			'Changed Package',
+			'Changed Status',
+			'Changed Upload Speed',
+			'Removed IP Address',
+		];
 		const oSqlSelect = this.oCFD1
 			.sql()
 			.from('pre_bee_logs')
 			.select({ id: '[no]', action: 'action', customerid: 'customerid', oldvalue: 'oldvalue', newvalue: 'newvalue', date: 'date' })
-			.where([['processed=?', [0]]])
+			.where([
+				['processed = ?', [0]],
+				[`action IN (${aActions.map(() => '?').join(', ')})`, aActions],
+			])
 			.orderBy([['no', 'ASC']])
 			.limit(limit)
 			.buildSelect();
@@ -293,11 +306,18 @@ export class CustomerDate {
 	}
 
 	public async putAllCustomerInfoIfStillNull() {
-		// 把全部的用户信息都往[pre_bee_customer_dates]表里更新
+		// 把全部的用户信息都往[pre_bee_customer_nwsrv_dates]表里更新
 		const oSqlSelect = this.oCFD1
 			.sql()
 			.from('pre_bee_customers')
-			.select({ id: '[id]', customerid: 'customerid', download: 'download', upload: 'upload', package: 'package', ipservice: 'ipservice' })
+			.select({
+				id: '[id]',
+				customerid: 'customerid',
+				bw_dl_mbps: 'download',
+				bw_ul_mbps: 'upload',
+				package: 'package',
+				ipservice: 'ipservice',
+			})
 			.orderBy([['id', 'ASC']])
 			.buildSelect();
 		const sqlResult = await this.oCFD1.all(oSqlSelect);
@@ -307,7 +327,7 @@ export class CustomerDate {
 				continue;
 			}
 			const customerid = customerRow['customerid']?.toString();
-			for (const fieldName of ['download', 'upload']) {
+			for (const fieldName of ['bw_dl_mbps', 'bw_ul_mbps']) {
 				const value = Number(customerRow[fieldName]?.toString().match(/\d+/)?.[0]);
 				if (value) {
 					await this.updateFieldIfNull(customerid, fieldName, value);
@@ -326,14 +346,14 @@ export class CustomerDate {
 	}
 
 	public async putCustomerInfoIfStillNull() {
-		// 只将有空值的[pre_bee_customer_dates]表列出customerid
+		// 只将有空值的[pre_bee_customer_nwsrv_dates]表列出customerid
 		const oSqlSelect = this.oCFD1
 			.sql()
 			.from(this.sTableName)
 			.select({ customerid: 'customerid' })
 			.where([
 				['by_date>?', ['2024-1-1']],
-				['download IS NULL OR upload IS NULL OR ipservice IS NULL OR package IS NULL', []],
+				['bw_dl_mbps IS NULL OR bw_ul_mbps IS NULL OR ipservice IS NULL OR package IS NULL', []],
 			])
 			.orderBy([['id', 'ASC']])
 			.buildSelect();
