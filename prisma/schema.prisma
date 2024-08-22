@@ -124,8 +124,8 @@ model pre_bee_customer_nwsrv_prices {
   customerid   String // 客户ID
   package      String // 专线或共享
   ipservice    String // IP服务地区
-  ip_unitprice Int // IP单价
   bw_unitprice Int // 带宽单价
+  ip_unitprice Int // IP单价
 
   @@unique([customerid, package, ipservice])
 }

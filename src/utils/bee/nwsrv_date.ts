@@ -1,6 +1,6 @@
 import { CFD1 } from '@/utils/cfd1';
 
-class CustomerDateInfo {
+export class NwsrvDateInfo {
 	update_id?: number;
 	customerid: string;
 	by_date: string;
@@ -23,7 +23,7 @@ class CustomerDateInfo {
 	}
 }
 
-export class CustomerDate {
+export class NwsrvDate {
 	private oCFD1: CFD1;
 	private sTableName = 'pre_bee_customer_nwsrv_dates';
 
@@ -31,7 +31,7 @@ export class CustomerDate {
 		this.oCFD1 = oCFD1;
 	}
 
-	private async getCustomerDate(customerid: string, by_date: string): Promise<CustomerDateInfo> {
+	private async getNwsrvDate(customerid: string, by_date: string): Promise<NwsrvDateInfo> {
 		const sSelect = {
 			status: 'status',
 			ip_pcs: 'ip_pcs',
@@ -51,7 +51,7 @@ export class CustomerDate {
 			.buildSelect();
 		const sqlResult = await this.oCFD1.first(oSqlSelect);
 		if (sqlResult) {
-			return new CustomerDateInfo({ ...sqlResult, customerid, by_date });
+			return new NwsrvDateInfo({ ...sqlResult, customerid, by_date });
 		}
 		const oSqlSelect2 = this.oCFD1
 			.sql()
@@ -62,59 +62,59 @@ export class CustomerDate {
 			.buildSelect();
 		const sqlResult2 = await this.oCFD1.first(oSqlSelect2);
 		if (sqlResult2) {
-			return new CustomerDateInfo({ ...sqlResult2, customerid, by_date });
+			return new NwsrvDateInfo({ ...sqlResult2, customerid, by_date });
 		}
-		return new CustomerDateInfo({ customerid, by_date });
+		return new NwsrvDateInfo({ customerid, by_date });
 	}
 
-	public async updateCustomerDate(customerDateInfo: CustomerDateInfo) {
+	public async updateNwsrvDate(nwsrvDateInfo: NwsrvDateInfo) {
 		const oSqlUpdate = this.oCFD1
 			.sql()
 			.from(this.sTableName)
 			.set({
-				status: customerDateInfo.status,
-				ip_pcs: customerDateInfo.ip_pcs,
-				bw_dl_mbps: customerDateInfo.bw_dl_mbps,
-				bw_ul_mbps: customerDateInfo.bw_ul_mbps,
-				ipservice: customerDateInfo.ipservice,
-				package: customerDateInfo.package,
+				status: nwsrvDateInfo.status,
+				ip_pcs: nwsrvDateInfo.ip_pcs,
+				bw_dl_mbps: nwsrvDateInfo.bw_dl_mbps,
+				bw_ul_mbps: nwsrvDateInfo.bw_ul_mbps,
+				ipservice: nwsrvDateInfo.ipservice,
+				package: nwsrvDateInfo.package,
 			})
-			.where([['id = ?', [customerDateInfo.update_id]]])
+			.where([['id = ?', [nwsrvDateInfo.update_id]]])
 			.buildUpdate();
 		await this.oCFD1.all(oSqlUpdate);
 	}
 
-	public async insertCustomerDate(customerDateInfo: CustomerDateInfo) {
+	public async insertNwsrvDate(nwsrvDateInfo: NwsrvDateInfo) {
 		const oSqlUpdate = this.oCFD1
 			.sql()
 			.from(this.sTableName)
 			.set({
-				customerid: customerDateInfo.customerid,
-				by_date: customerDateInfo.by_date,
-				status: customerDateInfo.status,
-				ip_pcs: customerDateInfo.ip_pcs,
-				bw_dl_mbps: customerDateInfo.bw_dl_mbps,
-				bw_ul_mbps: customerDateInfo.bw_ul_mbps,
-				ipservice: customerDateInfo.ipservice,
-				package: customerDateInfo.package,
+				customerid: nwsrvDateInfo.customerid,
+				by_date: nwsrvDateInfo.by_date,
+				status: nwsrvDateInfo.status,
+				ip_pcs: nwsrvDateInfo.ip_pcs,
+				bw_dl_mbps: nwsrvDateInfo.bw_dl_mbps,
+				bw_ul_mbps: nwsrvDateInfo.bw_ul_mbps,
+				ipservice: nwsrvDateInfo.ipservice,
+				package: nwsrvDateInfo.package,
 			})
 			.buildInsert();
 		await this.oCFD1.all(oSqlUpdate);
 	}
 
-	public async upsertCustomerDate(customerDateInfo: CustomerDateInfo) {
+	public async upsertNwsrvDate(nwsrvDateInfo: NwsrvDateInfo) {
 		const oSqlUpsert = this.oCFD1
 			.sql()
 			.from(this.sTableName)
 			.set({
-				status: customerDateInfo.status,
-				ip_pcs: customerDateInfo.ip_pcs,
-				bw_dl_mbps: customerDateInfo.bw_dl_mbps,
-				bw_ul_mbps: customerDateInfo.bw_ul_mbps,
-				ipservice: customerDateInfo.ipservice,
-				package: customerDateInfo.package,
+				status: nwsrvDateInfo.status,
+				ip_pcs: nwsrvDateInfo.ip_pcs,
+				bw_dl_mbps: nwsrvDateInfo.bw_dl_mbps,
+				bw_ul_mbps: nwsrvDateInfo.bw_ul_mbps,
+				ipservice: nwsrvDateInfo.ipservice,
+				package: nwsrvDateInfo.package,
 			})
-			.conflict({ customerid: customerDateInfo.customerid, by_date: customerDateInfo.by_date })
+			.conflict({ customerid: nwsrvDateInfo.customerid, by_date: nwsrvDateInfo.by_date })
 			.buildUpsert();
 		//console.log('插入数据库表的SQL语句', this.oCFD1.getSQL(oSqlUpsert));
 		await this.oCFD1.all(oSqlUpsert);
@@ -136,7 +136,7 @@ export class CustomerDate {
 		await this.oCFD1.all(oSqlUpdate);
 	}
 
-	private async getCustomerDateInfo(logRow: Record<string, unknown>): Promise<CustomerDateInfo | null> {
+	private async getNwsrvDateInfo(logRow: Record<string, unknown>): Promise<NwsrvDateInfo | null> {
 		if (!logRow['customerid'] || !logRow['date'] || !logRow['action']) {
 			return null;
 		}
@@ -145,7 +145,7 @@ export class CustomerDate {
 		const action = logRow['action'].toString();
 		const oldvalue = logRow['oldvalue']?.toString();
 		const newvalue = logRow['newvalue']?.toString();
-		const customerDateInfo = await this.getCustomerDate(customerid, date);
+		const nwsrvDateInfo = await this.getNwsrvDate(customerid, date);
 		switch (action.toLowerCase()) {
 			case '- Removed IP(s)'.toLowerCase():
 				return null;
@@ -153,14 +153,14 @@ export class CustomerDate {
 				return null;
 			case 'Added New Customer'.toLowerCase():
 				// 1：新增客户
-				customerDateInfo.status = 'active';
-				return customerDateInfo;
+				nwsrvDateInfo.status = 'active';
+				return nwsrvDateInfo;
 			case 'Allowed Testing'.toLowerCase():
 				return null;
 			case 'Assigned IP Address'.toLowerCase():
 				// 2：附加IP
-				customerDateInfo.ip_pcs++;
-				return customerDateInfo;
+				nwsrvDateInfo.ip_pcs++;
+				return nwsrvDateInfo;
 			case 'Change Customer ID'.toLowerCase():
 				return null;
 			case 'Change Location'.toLowerCase():
@@ -187,9 +187,9 @@ export class CustomerDate {
 					await this.updateFieldIfNull(customerid, 'bw_dl_mbps', download_oldvalue);
 				}
 				if (newvalue) {
-					customerDateInfo.bw_dl_mbps = Number(newvalue.match(/\d+/)?.[0]);
+					nwsrvDateInfo.bw_dl_mbps = Number(newvalue.match(/\d+/)?.[0]);
 				}
-				return customerDateInfo;
+				return nwsrvDateInfo;
 			case 'Changed Graph ID'.toLowerCase():
 				return null;
 			case 'Changed IP Address'.toLowerCase():
@@ -200,9 +200,9 @@ export class CustomerDate {
 					await this.updateFieldIfNull(customerid, 'ipservice', oldvalue);
 				}
 				if (newvalue) {
-					customerDateInfo.ipservice = newvalue;
+					nwsrvDateInfo.ipservice = newvalue;
 				}
-				return customerDateInfo;
+				return nwsrvDateInfo;
 			case 'Changed IP Service Location'.toLowerCase():
 				return null;
 			case 'Changed ISP'.toLowerCase():
@@ -215,9 +215,9 @@ export class CustomerDate {
 					await this.updateFieldIfNull(customerid, 'package', oldvalue);
 				}
 				if (newvalue) {
-					customerDateInfo.package = newvalue;
+					nwsrvDateInfo.package = newvalue;
 				}
-				return customerDateInfo;
+				return nwsrvDateInfo;
 			case 'Changed Port'.toLowerCase():
 				return null;
 			case 'Changed Router'.toLowerCase():
@@ -230,9 +230,9 @@ export class CustomerDate {
 					await this.updateFieldIfNull(customerid, 'status', oldvalue);
 				}
 				if (newvalue) {
-					customerDateInfo.status = newvalue;
+					nwsrvDateInfo.status = newvalue;
 				}
-				return customerDateInfo;
+				return nwsrvDateInfo;
 			case 'Changed Switch'.toLowerCase():
 				return null;
 			case 'Changed Upload Speed'.toLowerCase():
@@ -243,7 +243,7 @@ export class CustomerDate {
 					await this.updateFieldIfNull(customerid, 'bw_ul_mbps', upload_oldvalue);
 				}
 				if (newvalue) {
-					customerDateInfo.bw_ul_mbps = Number(newvalue.match(/\d+/)?.[0]);
+					nwsrvDateInfo.bw_ul_mbps = Number(newvalue.match(/\d+/)?.[0]);
 				}
 				return null;
 			case 'Changed VLAN'.toLowerCase():
@@ -290,8 +290,8 @@ export class CustomerDate {
 				return null;
 			case 'Removed IP Address'.toLowerCase():
 				// 8：删除附加的IP
-				customerDateInfo.ip_pcs--;
-				return customerDateInfo;
+				nwsrvDateInfo.ip_pcs--;
+				return nwsrvDateInfo;
 			default:
 				throw new Error(`无法处理[action=${action}]`);
 		}
@@ -326,12 +326,12 @@ export class CustomerDate {
 				continue;
 			}
 			const logRowId = Number(logRow['id']);
-			const customerDateInfo = await this.getCustomerDateInfo(logRow);
-			if (customerDateInfo) {
-				if (customerDateInfo.update_id) {
-					this.updateCustomerDate(customerDateInfo);
+			const nwsrvDateInfo = await this.getNwsrvDateInfo(logRow);
+			if (nwsrvDateInfo) {
+				if (nwsrvDateInfo.update_id) {
+					this.updateNwsrvDate(nwsrvDateInfo);
 				} else {
-					this.insertCustomerDate(customerDateInfo);
+					this.insertNwsrvDate(nwsrvDateInfo);
 				}
 			}
 			const oSqlUpdate = this.oCFD1

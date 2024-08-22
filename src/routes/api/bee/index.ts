@@ -2,7 +2,8 @@ import { Route } from '@/utils/route';
 import { CFD1 } from '@/utils/cfd1';
 import { cJson } from '@/utils/vben';
 import { ApiBee } from '@/utils/api/bee';
-import { CustomerDate } from '@/utils/bee/customer_date';
+import { NwsrvDate } from '@/utils/bee/nwsrv_date';
+import { NwsrvBills } from '@/utils/bee/nwsrv_bill';
 
 const app = Route();
 
@@ -50,7 +51,7 @@ app.get('/fetch_logs', async (c) => {
 
 app.get('/put_customer_date', async (c) => {
 	const oCFD1 = new CFD1(c.env.DB);
-	const customerDate = new CustomerDate(oCFD1);
+	const customerDate = new NwsrvDate(oCFD1);
 	const result: Record<string, unknown> = {};
 	if (1) {
 		await oCFD1.begin();
@@ -65,6 +66,12 @@ app.get('/put_customer_date', async (c) => {
 	if (1) {
 		await oCFD1.begin();
 		result.process2_count = await customerDate.putCustomerInfoIfStillNull();
+		await oCFD1.commit();
+	}
+	const nwsrvBills = new NwsrvBills(oCFD1);
+	if (1) {
+		await oCFD1.begin();
+		result.process3_count = await nwsrvBills.start();
 		await oCFD1.commit();
 	}
 	return cJson(c, { code: 0, type: 'success', message: 'ok', result });
