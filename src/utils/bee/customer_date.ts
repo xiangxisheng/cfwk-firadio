@@ -1,6 +1,7 @@
 import { CFD1 } from '@/utils/cfd1';
 
 class CustomerDateInfo {
+	update_id?: number;
 	customerid: string;
 	by_date: string;
 	status?: string;
@@ -10,6 +11,7 @@ class CustomerDateInfo {
 	ipservice?: string;
 	package?: string;
 	constructor(record: Record<string, unknown>) {
+		this.update_id = Number(record['update_id']);
 		this.customerid = record['customerid']?.toString() ?? '';
 		this.by_date = record['by_date']?.toString() ?? '';
 		this.status = record['status']?.toString();
@@ -31,6 +33,7 @@ export class CustomerDate {
 
 	private async getCustomerDate(customerid: string, by_date: string): Promise<CustomerDateInfo> {
 		const sSelect = {
+			update_id: 'id',
 			status: 'status',
 			ip_pcs: 'ip_pcs',
 			bw_dl_mbps: 'bw_dl_mbps',
@@ -65,7 +68,42 @@ export class CustomerDate {
 		return new CustomerDateInfo({ customerid, by_date });
 	}
 
-	public async saveCustomerDate(customerDateInfo: CustomerDateInfo) {
+	public async updateCustomerDate(customerDateInfo: CustomerDateInfo) {
+		const oSqlUpdate = this.oCFD1
+			.sql()
+			.from(this.sTableName)
+			.set({
+				status: customerDateInfo.status,
+				ip_pcs: customerDateInfo.ip_pcs,
+				bw_dl_mbps: customerDateInfo.bw_dl_mbps,
+				bw_ul_mbps: customerDateInfo.bw_ul_mbps,
+				ipservice: customerDateInfo.ipservice,
+				package: customerDateInfo.package,
+			})
+			.where([['id = ?', [customerDateInfo.update_id]]])
+			.buildUpdate();
+		await this.oCFD1.all(oSqlUpdate);
+	}
+
+	public async insertCustomerDate(customerDateInfo: CustomerDateInfo) {
+		const oSqlUpdate = this.oCFD1
+			.sql()
+			.from(this.sTableName)
+			.set({
+				customerid: customerDateInfo.customerid,
+				by_date: customerDateInfo.by_date,
+				status: customerDateInfo.status,
+				ip_pcs: customerDateInfo.ip_pcs,
+				bw_dl_mbps: customerDateInfo.bw_dl_mbps,
+				bw_ul_mbps: customerDateInfo.bw_ul_mbps,
+				ipservice: customerDateInfo.ipservice,
+				package: customerDateInfo.package,
+			})
+			.buildInsert();
+		await this.oCFD1.all(oSqlUpdate);
+	}
+
+	public async upsertCustomerDate(customerDateInfo: CustomerDateInfo) {
 		const oSqlUpsert = this.oCFD1
 			.sql()
 			.from(this.sTableName)
@@ -291,7 +329,11 @@ export class CustomerDate {
 			const logRowId = Number(logRow['id']);
 			const customerDateInfo = await this.getCustomerDateInfo(logRow);
 			if (customerDateInfo) {
-				this.saveCustomerDate(customerDateInfo);
+				if (customerDateInfo.update_id) {
+					this.updateCustomerDate(customerDateInfo);
+				} else {
+					this.insertCustomerDate(customerDateInfo);
+				}
 			}
 			const oSqlUpdate = this.oCFD1
 				.sql()
