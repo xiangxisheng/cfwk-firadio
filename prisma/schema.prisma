@@ -105,11 +105,11 @@ model pre_bee_customer_nwsrvs {
 
 model pre_bee_customer_nwsrv_dates {
   // 客户网络服务按日期分类
-  id         Int     @id @default(autoincrement())
+  id         Int      @id @default(autoincrement())
   customerid String
-  by_date    String
+  by_date    DateTime
   status     String? // 状态
-  ip_pcs     Int     @default(0) // IP数量
+  ip_pcs     Int      @default(0) // IP数量
   bw_dl_mbps Int? // 下载带宽
   bw_ul_mbps Int? // 上传带宽
   package    String? // 专线或共享
@@ -120,20 +120,22 @@ model pre_bee_customer_nwsrv_dates {
 
 model pre_bee_customer_nwsrv_prices {
   // 客户网络服务的价格
-  id           Int     @id @default(autoincrement())
-  customerid   String  @unique // 客户ID
-  package      String? // 专线或共享
-  ipservice    String? // IP服务地区
+  id           Int    @id @default(autoincrement())
+  customerid   String // 客户ID
+  package      String // 专线或共享
+  ipservice    String // IP服务地区
   ip_unitprice Int // IP单价
   bw_unitprice Int // 带宽单价
+
+  @@unique([customerid, package, ipservice])
 }
 
 model pre_bee_customer_nwsrv_bills {
   // 客户网络服务的账单
-  id         Int    @id @default(autoincrement())
+  id         Int      @id @default(autoincrement())
   customerid String // 客户ID
-  date_begin String // 计费开始日期，格式为 "YYYY-MM-DD"
-  date_end   String // 计费结束日期，格式为 "YYYY-MM-DD"
+  date_begin DateTime // 计费开始日期，格式为 "YYYY-MM-DD"
+  date_end   DateTime // 计费结束日期，格式为 "YYYY-MM-DD"
   package    String // 专线或共享
   ipservice  String // IP服务地区
   bw_dl_mbps Int // 下载带宽

@@ -33,7 +33,6 @@ export class CustomerDate {
 
 	private async getCustomerDate(customerid: string, by_date: string): Promise<CustomerDateInfo> {
 		const sSelect = {
-			update_id: 'id',
 			status: 'status',
 			ip_pcs: 'ip_pcs',
 			bw_dl_mbps: 'bw_dl_mbps',
@@ -44,7 +43,7 @@ export class CustomerDate {
 		const oSqlSelect = this.oCFD1
 			.sql()
 			.from(this.sTableName)
-			.select(sSelect)
+			.select({ update_id: 'id', ...sSelect })
 			.where([
 				['customerid=?', [customerid]],
 				['by_date=?', [by_date]],
