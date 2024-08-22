@@ -130,7 +130,8 @@ export class NwsrvBills {
 				// 生成从[lastDate]开始到[by_date]的当月
 				bills.push(new BillInfo(customerid, lastNDI.by_date, this.adjustDate(curNDI.by_date, -1), lastNDI));
 			}
-			lastNDI = curNDI;
+			// 如果是非活跃状态就要停止计费
+			lastNDI = curNDI.status === 'active' ? curNDI : null;
 		}
 		console.log(bills);
 		return count;
