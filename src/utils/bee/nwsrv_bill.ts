@@ -45,9 +45,11 @@ export class NwsrvBills {
 			if (!nwpRow['customerid']) {
 				continue;
 			}
-			console.log(nwpRow);
 			const customerid = nwpRow['customerid'].toString();
-			await this.getNewBill(customerid);
+			const bills = await this.getNewBill(customerid);
+			for (const bill of bills) {
+				await this.insertToBill(bill);
+			}
 		}
 		return count;
 	}
@@ -75,7 +77,7 @@ export class NwsrvBills {
 		return this.formatDate(new Date(date.getFullYear(), date.getMonth() + 1, 0));
 	}
 
-	private async getNewBill(customerid: string) {
+	private async getNewBill(customerid: string): Promise<Array<BillInfo>> {
 		// 根据客户ID号生成账单
 		const oSqlSelect = this.oCFD1
 			.sql()
@@ -93,7 +95,6 @@ export class NwsrvBills {
 			.orderBy([['id', 'ASC']])
 			.buildSelect();
 		const sqlResult = await this.oCFD1.all(oSqlSelect);
-		var count = 0;
 		const bills: Array<BillInfo> = [];
 		var lastRow;
 		const nwdRows: Array<NwsrvDateInfo> = [];
@@ -108,7 +109,6 @@ export class NwsrvBills {
 		}
 		var lastNDI;
 		for (const curNDI of nwdRows) {
-			count++;
 			if (!lastNDI) {
 				lastNDI = curNDI;
 				continue;
@@ -133,7 +133,59 @@ export class NwsrvBills {
 			// 如果是非活跃状态就要停止计费
 			lastNDI = curNDI.status === 'active' ? curNDI : null;
 		}
-		console.log(bills);
-		return count;
+		return bills;
+	}
+
+	private async getPrice(
+		_customerid: string,
+		_package: string = 'Dedicated',
+		_ipservice: string = 'local'
+	): Promise<Record<string, number> | undefined> {
+		const oSqlSelect = this.oCFD1
+			.sql()
+			.from('pre_bee_customer_nwsrv_prices')
+			.select({
+				price_bw: 'price_bw',
+				price_ip: 'price_ip',
+			})
+			.where([
+				['customerid = ?', [_customerid]],
+				['package = ?', [_package]],
+				['ipservice = ?', [_ipservice]],
+			])
+			.buildSelect();
+		const record = await this.oCFD1.first(oSqlSelect);
+		if (!record) {
+			return;
+		}
+		return {
+			price_bw: Number(record['price_bw']),
+			price_ip: Number(record['price_ip']),
+		};
+	}
+
+	private async insertToBill(bill: BillInfo) {
+		const price = await this.getPrice(bill.customerid, bill.package, bill.ipservice);
+		if (!price) {
+			console.info('没有匹配到价格', bill.customerid, bill.package, bill.ipservice);
+			return;
+		}
+		const oSqlUpsert = this.oCFD1
+			.sql()
+			.from(this.sTableName)
+			.set({
+				customerid: bill.customerid,
+				date_begin: bill.date_begin,
+				date_end: bill.date_end,
+				package: bill.package,
+				ipservice: bill.ipservice,
+				bw_dl_mbps: bill.bw_dl_mbps,
+				bw_ul_mbps: bill.bw_ul_mbps,
+				ip_pcs: bill.ip_pcs,
+				...price,
+			})
+			.conflict({ customerid: bill.customerid, date_begin: bill.date_begin })
+			.buildUpsert();
+		await this.oCFD1.all(oSqlUpsert);
 	}
 }

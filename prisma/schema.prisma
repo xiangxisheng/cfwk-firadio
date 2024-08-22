@@ -120,12 +120,12 @@ model pre_bee_customer_nwsrv_dates {
 
 model pre_bee_customer_nwsrv_prices {
   // 客户网络服务的价格
-  id           Int    @id @default(autoincrement())
-  customerid   String // 客户ID
-  package      String // 专线或共享
-  ipservice    String // IP服务地区
-  bw_unitprice Int // 带宽单价
-  ip_unitprice Int // IP单价
+  id         Int    @id @default(autoincrement())
+  customerid String // 客户ID
+  package    String // 专线或共享
+  ipservice  String // IP服务地区
+  price_bw   Int // 带宽单价
+  price_ip   Int // IP单价
 
   @@unique([customerid, package, ipservice])
 }
@@ -141,6 +141,10 @@ model pre_bee_customer_nwsrv_bills {
   bw_dl_mbps Int // 下载带宽
   bw_ul_mbps Int // 上传带宽
   ip_pcs     Int // IP数量
+  price_bw   Int // 带宽单价
+  price_ip   Int // IP单价
 
+  @@unique([date_begin, customerid])
+  @@unique([date_end, customerid])
   @@index([customerid])
 }
