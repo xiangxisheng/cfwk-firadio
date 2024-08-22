@@ -5,7 +5,8 @@ class CustomerDateInfo {
 	by_date: string;
 	status?: string;
 	ip_pcs: number;
-	bandwidth?: number;
+	download?: number;
+	upload?: number;
 	ipservice?: string;
 	package?: string;
 	constructor(record: Record<string, unknown>) {
@@ -13,7 +14,8 @@ class CustomerDateInfo {
 		this.by_date = record['by_date']?.toString() ?? '';
 		this.status = record['status']?.toString();
 		this.ip_pcs = Number(record['ip_pcs'] ?? 0);
-		this.bandwidth = record['bandwidth'] ? Number(record['bandwidth']) : undefined;
+		this.download = record['download'] ? Number(record['download']) : undefined;
+		this.upload = record['upload'] ? Number(record['upload']) : undefined;
 		this.ipservice = record['ipservice']?.toString();
 		this.package = record['package']?.toString();
 	}
@@ -21,16 +23,24 @@ class CustomerDateInfo {
 
 export class CustomerDate {
 	private oCFD1: CFD1;
+	private sTableName = 'pre_bee_customer_dates';
 
 	constructor(oCFD1: CFD1) {
 		this.oCFD1 = oCFD1;
 	}
 
 	private async getCustomerDate(customerid: string, by_date: string): Promise<CustomerDateInfo> {
-		const sSelect = { status: 'status', ip_pcs: 'ip_pcs', bandwidth: 'bandwidth', ipservice: 'ipservice', package: 'package' };
+		const sSelect = {
+			status: 'status',
+			ip_pcs: 'ip_pcs',
+			download: 'download',
+			upload: 'upload',
+			ipservice: 'ipservice',
+			package: 'package',
+		};
 		const oSqlSelect = this.oCFD1
 			.sql()
-			.from('pre_bee_customer_date')
+			.from(this.sTableName)
 			.select(sSelect)
 			.where([
 				['customerid=?', [customerid]],
@@ -43,7 +53,7 @@ export class CustomerDate {
 		}
 		const oSqlSelect2 = this.oCFD1
 			.sql()
-			.from('pre_bee_customer_date')
+			.from(this.sTableName)
 			.select(sSelect)
 			.where([['customerid=?', [customerid]]])
 			.orderBy([['id', 'DESC']])
@@ -58,11 +68,12 @@ export class CustomerDate {
 	public async saveCustomerDate(customerDateInfo: CustomerDateInfo) {
 		const oSqlUpsert = this.oCFD1
 			.sql()
-			.from('pre_bee_customer_date')
+			.from(this.sTableName)
 			.set({
 				status: customerDateInfo.status,
 				ip_pcs: customerDateInfo.ip_pcs,
-				bandwidth: customerDateInfo.bandwidth,
+				download: customerDateInfo.download,
+				upload: customerDateInfo.upload,
 				ipservice: customerDateInfo.ipservice,
 				package: customerDateInfo.package,
 			})
@@ -70,6 +81,22 @@ export class CustomerDate {
 			.buildUpsert();
 		//console.log('插入数据库表的SQL语句', this.oCFD1.getSQL(oSqlUpsert));
 		await this.oCFD1.all(oSqlUpsert);
+	}
+
+	private async updateFieldIfNull(customerid: string, fieldName: string, value: string | number) {
+		const set: Record<string, string | number> = {};
+		set[fieldName] = value;
+		const oSqlUpdate = this.oCFD1
+			.sql()
+			.from(this.sTableName)
+			.set(set)
+			.where([
+				['[customerid]=?', [customerid]],
+				[`[${fieldName}]IS NULL`, []],
+			])
+			.buildUpdate();
+		//console.log('SQL语句', this.oCFD1.getSQL(oSqlUpdate));
+		await this.oCFD1.all(oSqlUpdate);
 	}
 
 	private async getCustomerDateInfo(logRow: Record<string, unknown>): Promise<CustomerDateInfo | null> {
@@ -117,23 +144,13 @@ export class CustomerDate {
 				return null;
 			case 'Changed Download Speed'.toLowerCase():
 				// 3：修改下行速度
-				const bandwidth_oldvalue = Number(oldvalue?.match(/\d+/)?.[0]);
-				if (bandwidth_oldvalue) {
-					// 先把之前没有bandwidth参数的用oldvalue更新上去
-					const oSqlUpdate = this.oCFD1
-						.sql()
-						.from('pre_bee_customer_date')
-						.set({ bandwidth: bandwidth_oldvalue })
-						.where([
-							['[customerid]=?', [customerid]],
-							['[bandwidth]IS NULL', []],
-						])
-						.buildUpdate();
-					//console.log('SQL语句', this.oCFD1.getSQL(oSqlUpdate));
-					await this.oCFD1.all(oSqlUpdate);
+				const download_oldvalue = Number(oldvalue?.match(/\d+/)?.[0]);
+				if (download_oldvalue) {
+					// 先把之前没有[download]参数的用oldvalue更新上去
+					await this.updateFieldIfNull(customerid, 'download', download_oldvalue);
 				}
 				if (newvalue) {
-					customerDateInfo.bandwidth = Number(newvalue.match(/\d+/)?.[0]);
+					customerDateInfo.download = Number(newvalue.match(/\d+/)?.[0]);
 				}
 				return customerDateInfo;
 			case 'Changed Graph ID'.toLowerCase():
@@ -143,16 +160,7 @@ export class CustomerDate {
 			case 'Changed IP Service'.toLowerCase():
 				// 4：修改IP服务
 				if (oldvalue) {
-					const oSqlUpdate = this.oCFD1
-						.sql()
-						.from('pre_bee_customer_date')
-						.set({ ipservice: oldvalue })
-						.where([
-							['[customerid]=?', [customerid]],
-							['[ipservice]IS NULL', []],
-						])
-						.buildUpdate();
-					await this.oCFD1.all(oSqlUpdate);
+					await this.updateFieldIfNull(customerid, 'ipservice', oldvalue);
 				}
 				if (newvalue) {
 					customerDateInfo.ipservice = newvalue;
@@ -167,16 +175,7 @@ export class CustomerDate {
 			case 'Changed Package'.toLowerCase():
 				// 5：修改网络类型
 				if (oldvalue) {
-					const oSqlUpdate = this.oCFD1
-						.sql()
-						.from('pre_bee_customer_date')
-						.set({ package: oldvalue })
-						.where([
-							['[customerid]=?', [customerid]],
-							['[package]IS NULL', []],
-						])
-						.buildUpdate();
-					await this.oCFD1.all(oSqlUpdate);
+					await this.updateFieldIfNull(customerid, 'package', oldvalue);
 				}
 				if (newvalue) {
 					customerDateInfo.package = newvalue;
@@ -191,16 +190,7 @@ export class CustomerDate {
 			case 'Changed Status'.toLowerCase():
 				// 6：修改网络状态
 				if (oldvalue) {
-					const oSqlUpdate = this.oCFD1
-						.sql()
-						.from('pre_bee_customer_date')
-						.set({ status: oldvalue })
-						.where([
-							['[customerid]=?', [customerid]],
-							['[status]IS NULL', []],
-						])
-						.buildUpdate();
-					await this.oCFD1.all(oSqlUpdate);
+					await this.updateFieldIfNull(customerid, 'status', oldvalue);
 				}
 				if (newvalue) {
 					customerDateInfo.status = newvalue;
@@ -209,6 +199,15 @@ export class CustomerDate {
 			case 'Changed Switch'.toLowerCase():
 				return null;
 			case 'Changed Upload Speed'.toLowerCase():
+				// 3：修改下行速度
+				const upload_oldvalue = Number(oldvalue?.match(/\d+/)?.[0]);
+				if (upload_oldvalue) {
+					// 先把之前没有[upload]参数的用oldvalue更新上去
+					await this.updateFieldIfNull(customerid, 'upload', upload_oldvalue);
+				}
+				if (newvalue) {
+					customerDateInfo.upload = Number(newvalue.match(/\d+/)?.[0]);
+				}
 				return null;
 			case 'Changed VLAN'.toLowerCase():
 				return null;
@@ -273,7 +272,7 @@ export class CustomerDate {
 			.buildSelect();
 		const sqlResult = await this.oCFD1.all(oSqlSelect);
 		for (const logRow of sqlResult.results) {
-			if (!logRow['id'] || !logRow['customerid'] || !logRow['date'] || !logRow['action']) {
+			if (!logRow['id']) {
 				continue;
 			}
 			const logRowId = Number(logRow['id']);
@@ -291,5 +290,36 @@ export class CustomerDate {
 			count++;
 		}
 		return count;
+	}
+
+	public async putAllCustomerInfoIfStillNull() {
+		const oSqlSelect = this.oCFD1
+			.sql()
+			.from('pre_bee_customers')
+			.select({ id: '[id]', customerid: 'customerid', download: 'download', upload: 'upload', package: 'package', ipservice: 'ipservice' })
+			.orderBy([['id', 'ASC']])
+			.buildSelect();
+		const sqlResult = await this.oCFD1.all(oSqlSelect);
+		var count = 0;
+		for (const customerRow of sqlResult.results) {
+			if (!customerRow['customerid']) {
+				continue;
+			}
+			const customerid = customerRow['customerid']?.toString();
+			for (const fieldName of ['download', 'upload']) {
+				const value = Number(customerRow[fieldName]?.toString().match(/\d+/)?.[0]);
+				if (value) {
+					await this.updateFieldIfNull(customerid, fieldName, value);
+					count++;
+				}
+			}
+			for (const fieldName of ['package', 'ipservice']) {
+				const value = customerRow[fieldName]?.toString();
+				if (value) {
+					await this.updateFieldIfNull(customerid, fieldName, value);
+					count++;
+				}
+			}
+		}
 	}
 }

@@ -88,15 +88,29 @@ model pre_bee_logs {
   @@index([processed])
 }
 
-model pre_bee_customer_date {
-  id         Int     @id
+model pre_bee_customer_dates {
+  id         Int     @id @default(autoincrement())
   customerid String
   by_date    String
   status     String? // 状态
   ip_pcs     Int     @default(0) // IP数量
-  bandwidth  Int? // 带宽
-  ipservice  String?
-  package    String?
+  download   Int? // 下载带宽
+  upload     Int? // 上传带宽
+  package    String? // 专线或共享
+  ipservice  String? // IP服务地区
 
   @@unique([customerid, by_date])
+}
+
+model pre_bee_customers {
+  id              Int     @id @default(autoincrement())
+  customerid      String  @unique
+  customername    String?
+  customername_cn String?
+  status          String? // 状态
+  ip_pcs          Int     @default(0) // IP数量
+  download        String? // 下载带宽
+  upload          String? // 上传带宽
+  package         String? // 专线或共享
+  ipservice       String? // IP服务地区
 }
