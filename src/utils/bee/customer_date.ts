@@ -293,6 +293,7 @@ export class CustomerDate {
 	}
 
 	public async putAllCustomerInfoIfStillNull() {
+		// 把全部的用户信息都往[pre_bee_customer_dates]表里更新
 		const oSqlSelect = this.oCFD1
 			.sql()
 			.from('pre_bee_customers')
@@ -321,5 +322,27 @@ export class CustomerDate {
 				}
 			}
 		}
+		return count;
+	}
+
+	public async putCustomerInfoIfStillNull() {
+		// 只将有空值的[pre_bee_customer_dates]表列出customerid
+		const oSqlSelect = this.oCFD1
+			.sql()
+			.from(this.sTableName)
+			.select({ customerid: 'customerid' })
+			.where([
+				['by_date>?', ['2024-1-1']],
+				['download IS NULL OR upload IS NULL OR ipservice IS NULL OR package IS NULL', []],
+			])
+			.orderBy([['id', 'ASC']])
+			.buildSelect();
+		const sqlResult = await this.oCFD1.all(oSqlSelect);
+		var count = 0;
+		for (const cdRow of sqlResult.results) {
+			count++;
+			console.log(cdRow);
+		}
+		return count;
 	}
 }
