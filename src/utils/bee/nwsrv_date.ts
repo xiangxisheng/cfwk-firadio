@@ -21,6 +21,9 @@ export class NwsrvDateInfo {
 		this.ipservice = record['ipservice']?.toString();
 		this.package = record['package']?.toString();
 	}
+	setDate(_date: string) {
+		this.by_date = _date;
+	}
 }
 
 export class NwsrvDate {

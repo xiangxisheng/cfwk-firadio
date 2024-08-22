@@ -64,13 +64,13 @@ export class NwsrvBills {
 		return this.formatDate(new Date(date.getFullYear() + addyears, date.getMonth() + addMonths, date.getDate() + addDays));
 	}
 
-	private getBeginOfMonth(dateString: string): string {
-		const date = new Date(dateString);
+	private getBeginOfMonth(dateString: string | undefined = undefined): string {
+		const date = dateString ? new Date(dateString) : new Date();
 		return this.formatDate(new Date(date.getFullYear(), date.getMonth(), 1));
 	}
 
-	private getEndOfMonth(dateString: string): string {
-		const date = new Date(dateString);
+	private getEndOfMonth(dateString: string | undefined = undefined): string {
+		const date = dateString ? new Date(dateString) : new Date();
 		// 将日期设置为下个月的第0天，JavaScript 会自动处理为当前月的最后一天
 		return this.formatDate(new Date(date.getFullYear(), date.getMonth() + 1, 0));
 	}
@@ -95,10 +95,20 @@ export class NwsrvBills {
 		const sqlResult = await this.oCFD1.all(oSqlSelect);
 		var count = 0;
 		const bills: Array<BillInfo> = [];
-		var lastNDI = undefined;
+		var lastRow;
+		const nwdRows: Array<NwsrvDateInfo> = [];
 		for (const nwdRow of sqlResult.results) {
+			lastRow = nwdRow;
+			nwdRows.push(new NwsrvDateInfo(nwdRow));
+		}
+		if (lastRow) {
+			const nwDI = new NwsrvDateInfo(lastRow);
+			nwDI.setDate(this.adjustDate(this.getBeginOfMonth(), 0, 1));
+			nwdRows.push(nwDI);
+		}
+		var lastNDI;
+		for (const curNDI of nwdRows) {
 			count++;
-			const curNDI = new NwsrvDateInfo(nwdRow);
 			if (!lastNDI) {
 				lastNDI = curNDI;
 				continue;
@@ -113,7 +123,9 @@ export class NwsrvBills {
 					bills.push(new BillInfo(customerid, this.getBeginOfMonth(ss), this.getEndOfMonth(ss), lastNDI));
 					ss = this.adjustDate(ss, 0, 1);
 				}
-				bills.push(new BillInfo(customerid, this.getBeginOfMonth(ss), this.adjustDate(curNDI.by_date, -1), lastNDI));
+				if (ss < this.adjustDate(curNDI.by_date, 0, 0)) {
+					bills.push(new BillInfo(customerid, this.getBeginOfMonth(ss), this.adjustDate(curNDI.by_date, -1), lastNDI));
+				}
 			} else {
 				// 生成从[lastDate]开始到[by_date]的当月
 				bills.push(new BillInfo(customerid, lastNDI.by_date, this.adjustDate(curNDI.by_date, -1), lastNDI));
@@ -121,5 +133,6 @@ export class NwsrvBills {
 			lastNDI = curNDI;
 		}
 		console.log(bills);
+		return count;
 	}
 }
