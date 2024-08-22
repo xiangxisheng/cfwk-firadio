@@ -348,6 +348,9 @@ export class CustomerDate {
 
 	public async putAllCustomerInfoIfStillNull() {
 		// 把全部的用户信息都往[pre_bee_customer_nwsrv_dates]表里更新
+		if (1) {
+			throw new Error('本功能已由[putCustomerInfoIfStillNull]所取缔');
+		}
 		const oSqlSelect = this.oCFD1
 			.sql()
 			.from('pre_bee_customers')
@@ -391,18 +394,49 @@ export class CustomerDate {
 		const oSqlSelect = this.oCFD1
 			.sql()
 			.from(this.sTableName)
-			.select({ customerid: 'customerid' })
+			.select({ customerid: 'customerid', id: 'MAX(id)' })
 			.where([
-				['by_date>?', ['2024-1-1']],
+				['by_date>?', ['2024-01-01']],
 				['bw_dl_mbps IS NULL OR bw_ul_mbps IS NULL OR ipservice IS NULL OR package IS NULL', []],
 			])
+			.groupBy(['customerid'])
 			.orderBy([['id', 'ASC']])
 			.buildSelect();
 		const sqlResult = await this.oCFD1.all(oSqlSelect);
 		var count = 0;
 		for (const cdRow of sqlResult.results) {
 			count++;
+			if (!cdRow['customerid']) {
+				continue;
+			}
 			console.log(cdRow);
+			const customerid = cdRow['customerid'].toString();
+			const oSqlSelect = this.oCFD1
+				.sql()
+				.from('pre_bee_customer_nwsrvs')
+				.select({
+					bw_dl_mbps: 'download',
+					bw_ul_mbps: 'upload',
+					package: 'package',
+					ipservice: 'ipservice',
+				})
+				.where([['customerid = ?', [customerid]]])
+				.buildSelect();
+			const cnRow = await this.oCFD1.first(oSqlSelect);
+			if (cnRow) {
+				for (const fieldName of ['bw_dl_mbps', 'bw_ul_mbps']) {
+					const value = Number(cnRow[fieldName]?.toString().match(/\d+/)?.[0]);
+					if (value) {
+						await this.updateFieldIfNull(customerid, fieldName, value);
+					}
+				}
+				for (const fieldName of ['package', 'ipservice']) {
+					const value = cnRow[fieldName]?.toString();
+					if (value) {
+						await this.updateFieldIfNull(customerid, fieldName, value);
+					}
+				}
+			}
 		}
 		return count;
 	}

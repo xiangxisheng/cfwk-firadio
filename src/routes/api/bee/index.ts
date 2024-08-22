@@ -51,20 +51,22 @@ app.get('/fetch_logs', async (c) => {
 app.get('/put_customer_date', async (c) => {
 	const oCFD1 = new CFD1(c.env.DB);
 	const customerDate = new CustomerDate(oCFD1);
-	await oCFD1.begin();
-	const process1_count = await customerDate.start(1000000);
-	await oCFD1.commit();
+	const result: Record<string, unknown> = {};
+	if (1) {
+		await oCFD1.begin();
+		result.process1_count = await customerDate.start(1000000);
+		await oCFD1.commit();
+	}
 	if (0) {
 		await oCFD1.begin();
 		await customerDate.putAllCustomerInfoIfStillNull();
 		await oCFD1.commit();
 	}
-	const process2_count = await customerDate.putCustomerInfoIfStillNull();
-	const result = {
-		process1_count,
-		process2_count,
-	};
-
+	if (1) {
+		await oCFD1.begin();
+		result.process2_count = await customerDate.putCustomerInfoIfStillNull();
+		await oCFD1.commit();
+	}
 	return cJson(c, { code: 0, type: 'success', message: 'ok', result });
 });
 

@@ -2,6 +2,7 @@ interface SqlParam {
 	mSelect?: Record<string, string>;
 	sFrom: string;
 	aWhere?: Array<[string, any]>;
+	aGroupBy?: Array<string>;
 	aOrderBy?: Array<[string, string]>;
 	isLock: Boolean;
 	iLimit?: Number;
@@ -49,6 +50,10 @@ export function SQL() {
 			mData.aWhere = aWhere;
 			return oSql;
 		},
+		groupBy(aGroupBy: Array<string>) {
+			mData.aGroupBy = aGroupBy;
+			return oSql;
+		},
 		orderBy(aOrderBy: Array<[string, string]>) {
 			mData.aOrderBy = aOrderBy;
 			return oSql;
@@ -94,6 +99,13 @@ export function SQL() {
 			}
 			aSql.push(`FROM ${mData.sFrom}`);
 			putWhere(aSql);
+			if (mData.aGroupBy !== undefined) {
+				const aGroupBy = new Array<string>();
+				for (const o of mData.aGroupBy) {
+					aGroupBy.push(`${quoteSQLName(o)}`);
+				}
+				aSql.push(`GROUP BY ${aGroupBy.join(',')}`);
+			}
 			if (mData.aOrderBy !== undefined) {
 				const aOrderBy = new Array<string>();
 				for (const o of mData.aOrderBy) {
