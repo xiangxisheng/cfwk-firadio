@@ -147,3 +147,19 @@ model pre_bee_customer_nwsrv_bills {
   @@unique([date_end, customerid])
   @@index([customerid])
 }
+
+model pre_bee_dict {
+  // 翻译用的字典
+  id    Int     @id @default(autoincrement())
+  code  String  @unique // 被翻译的代码
+  zh_cn String? // 翻译成中文
+}
+
+model pre_bee_customer_nwsrv_sellers {
+  // 把客户分类：地区(area)、项目管理团队(pjmt)、销售员(seller)
+  id         Int     @id @default(autoincrement())
+  customerid String  @unique // 客户ID
+  pjmt       String? // 项目管理团队
+  area       String? // 地区
+  seller     String? // 销售员
+}

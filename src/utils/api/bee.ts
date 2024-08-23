@@ -87,6 +87,8 @@ export class ApiBee {
 		return await this.autoLoginRequest('/customer/get-all-log', { log_id: log_id_begin.toString() });
 	}
 	public async getAllCustomer(log_id_begin: number): Promise<ResponseData> {
-		return await this.autoLoginRequest('/customer/get-all-customer', { code: log_id_begin.toString() });
+		const limit = 1000;
+		const param = { code: log_id_begin.toString(), limit: limit.toString() };
+		return await this.autoLoginRequest('/customer/get-all-customer', param);
 	}
 }
