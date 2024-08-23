@@ -91,12 +91,11 @@ model pre_bee_logs {
 
 model pre_bee_customer_nwsrvs {
   // 从bee系统下载的客户网络服务列表
-  id              Int     @id @default(autoincrement())
+  code            Int     @id @default(autoincrement())
   customerid      String  @unique
   customername    String?
   customername_cn String?
   status          String? // 状态
-  ip_pcs          Int     @default(0) // IP数量
   download        String? // 下载带宽
   upload          String? // 上传带宽
   package         String? // 专线或共享

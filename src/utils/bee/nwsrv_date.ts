@@ -412,7 +412,7 @@ export class NwsrvDate {
 			if (!cdRow['customerid']) {
 				continue;
 			}
-			console.log(cdRow);
+			console.info('没有匹配到客户资料', cdRow);
 			const customerid = cdRow['customerid'].toString();
 			const oSqlSelect = this.oCFD1
 				.sql()

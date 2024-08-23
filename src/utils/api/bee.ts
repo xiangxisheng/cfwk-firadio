@@ -5,6 +5,7 @@ interface ResponseData {
 	data?: {
 		token?: string;
 		logs: Array<Record<string, string>>;
+		customers: Array<Record<string, string>>;
 	};
 }
 
@@ -82,7 +83,10 @@ export class ApiBee {
 		}
 		return res;
 	}
-	public async customerGetAllLog(log_id_begin: number): Promise<ResponseData> {
+	public async getAllLog(log_id_begin: number): Promise<ResponseData> {
 		return await this.autoLoginRequest('/customer/get-all-log', { log_id: log_id_begin.toString() });
+	}
+	public async getAllCustomer(log_id_begin: number): Promise<ResponseData> {
+		return await this.autoLoginRequest('/customer/get-all-customer', { code: log_id_begin.toString() });
 	}
 }
