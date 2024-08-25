@@ -13,7 +13,7 @@ app.onError((err, c) => {
 		return c.json(err.resultData);
 	}
 	console.error(`app[/api].onError: ${err.message}`);
-	return c.json({ message: { type: "error", content: err.message } });
+	return c.json({ message: { type: 'error', content: err.message } });
 });
 
 // 跨域中间件
@@ -39,7 +39,7 @@ app.use('*', async (c: any, next) => {
 
 app.route('/console', require('./console').default);
 app.route('/bee', require('./bee').default);
-app.route('/bkatm', require('./bkatm').default);
+app.route('/vben', require('./vben').default);
 
 app.get('/', (c) => {
 	return c.text('当前是API接口的首页');
