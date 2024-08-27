@@ -8,6 +8,16 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model links {
+  id      Int    @id @default(autoincrement())
+  created Int
+  updated Int?
+  user_id Int
+  name    String @unique
+  title   String
+  url     String
+}
+
 model mails {
   id          Int     @id @default(autoincrement())
   created     Int
@@ -123,8 +133,8 @@ model pre_bee_customer_nwsrv_prices {
   customerid String // 客户ID
   package    String // 专线或共享
   ipservice  String // IP服务地区
-  price_bw   Int // 带宽单价
-  price_ip   Int // IP单价
+  price_bw   Float // 带宽单价
+  price_ip   Float // IP单价
 
   @@unique([customerid, package, ipservice])
 }
@@ -140,8 +150,8 @@ model pre_bee_customer_nwsrv_bills {
   bw_dl_mbps Int // 下载带宽
   bw_ul_mbps Int // 上传带宽
   ip_pcs     Int // IP数量
-  price_bw   Int // 带宽单价
-  price_ip   Int // IP单价
+  price_bw   Float // 带宽单价
+  price_ip   Float // IP单价
 
   @@unique([date_begin, customerid])
   @@unique([date_end, customerid])
@@ -162,4 +172,24 @@ model pre_bee_customer_nwsrv_sellers {
   pjmt       String? // 项目管理团队
   area       String? // 地区
   seller     String? // 销售员
+}
+
+model pre_bee_customer_nwsrv_bills_amy {
+  // 客户网络服务的账单
+  id         Int       @id @default(autoincrement())
+  customerid String? // 客户ID
+  date_begin DateTime? // 计费开始日期，格式为 "YYYY-MM-DD"
+  date_end   DateTime? // 计费结束日期，格式为 "YYYY-MM-DD"
+  days       Int?
+  package    String? // 专线或共享
+  ipservice  String? // IP服务地区
+  bw_dl_mbps Int? // 下载带宽
+  bw_ul_mbps Int? // 上传带宽
+  ip_pcs     Int? // IP数量
+  price_bw   Float? // 带宽单价
+  price_ip   Float? // IP单价
+  subtotal   Float?
+  discount   Float?
+
+  @@index([customerid])
 }

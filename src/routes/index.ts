@@ -4,11 +4,13 @@ import crc32 from '@/utils/crc32.js';
 import { Config } from '@/utils/config';
 import { ISettingValue } from '@/utils/config/base';
 import { CFD1 } from '@/utils/cfd1';
+import { getPartsOfDomain, getPartsOfPathname } from '@/utils/common';
+import renderHtml from '@/utils/renderHtml';
 
 const app = Route();
 
 app.onError((err, c) => {
-	const msg = `app.onError: ${err.message}`;
+	const msg = `app.onError(/): ${err.message}`;
 	console.error(msg);
 	return c.json({ message: msg }, 500);
 });
@@ -25,6 +27,44 @@ const config_cache: Record<string, Record<string, ISettingValue>> = {};
 
 app.use('*', async (c, next) => {
 	const oCFD1 = new CFD1(c.env.DB);
+	// 获取链接配置
+	const oUrl = new URL(c.req.url);
+	const aSubDomain = getPartsOfDomain(oUrl.hostname);
+	if (aSubDomain.length === 2) {
+		// 顶级域名要跳转到带www的二级域名
+		if (oUrl.pathname === '/') {
+			return Response.redirect(`${oUrl.protocol}//www.${aSubDomain[1]}.${aSubDomain[0]}`);
+		}
+	}
+	const aLinkName = getPartsOfPathname(oUrl.pathname);
+	const sRootLinkName = aLinkName[0] ?? '';
+	if (sRootLinkName) {
+		const oSqlLinks = oCFD1
+			.sql()
+			.select({
+				title: 'title',
+				url: 'url',
+			})
+			.from('links')
+			.where([['name=?', [sRootLinkName]]])
+			.buildSelect();
+		const rLink = await oCFD1.first(oSqlLinks);
+		if (rLink) {
+			// 找到对应的链接名称
+			const clientIP = c.req.header('CF-Connecting-IP');
+			const sUserIpCrc32 = clientIP ? crc32(clientIP).toString(16) : '';
+			if (aSubDomain.length === 2) {
+				// 如果访问了顶级域名，就跳转至带IP验证的二级域名
+				return Response.redirect(`${oUrl.protocol}//${sUserIpCrc32}.${aSubDomain[1]}.${aSubDomain[0]}${oUrl.pathname}`);
+			}
+			if (sUserIpCrc32 !== aSubDomain[2]) {
+				return c.html('该链接不存在或已失效', 404);
+			}
+			return c.html(renderHtml({ title: rLink['title']?.toString() ?? '', url: rLink['url']?.toString() ?? '' }));
+		}
+	}
+
+	// 下面是加载系统配置
 	const config = new Config({
 		async get(name: string): Promise<Record<string, ISettingValue>> {
 			if (config_cache[name]) {

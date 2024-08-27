@@ -71,6 +71,9 @@ export class NwsrvDate {
 	}
 
 	public async updateNwsrvDate(nwsrvDateInfo: NwsrvDateInfo) {
+		if (!nwsrvDateInfo.update_id) {
+			return;
+		}
 		const oSqlUpdate = this.oCFD1
 			.sql()
 			.from(this.sTableName)

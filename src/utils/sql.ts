@@ -1,7 +1,7 @@
 interface SqlParam {
 	mSelect?: Record<string, string>;
 	sFrom: string;
-	aWhere?: Array<[string, any]>;
+	aWhere?: Array<[string, Array<string | number>]>;
 	aGroupBy?: Array<string>;
 	aOrderBy?: Array<[string, string]>;
 	isLock: Boolean;
@@ -46,7 +46,7 @@ export function SQL() {
 			mData.mSelect = mSelect;
 			return oSql;
 		},
-		where(aWhere: Array<[string, Array<any>]>) {
+		where(aWhere: Array<[string, Array<string | number>]>) {
 			mData.aWhere = aWhere;
 			return oSql;
 		},
