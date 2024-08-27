@@ -5,15 +5,15 @@ const app = Route();
 app.get('/', async (c) => {
 	const config_site = await c.get('configs').site.data();
 	const fileCodes = {
-		index_js: 'Buf0DDIR',
+		index_js: 'BUE77cfu',
 		vue_js: 'BjERyvPm',
 		antd_js: 'BIEwWB4D',
 		index_css: 'jE23RaVa',
 	};
 	const __CONF__ = {
 		VITE_GLOB_APP_TITLE: config_site.title.value,
-		VITE_GLOB_API_URL: '/api/bkatm',
-		VITE_GLOB_UPLOAD_URL: '/api/bkatm/upload',
+		VITE_GLOB_API_URL: '/api/vben',
+		VITE_GLOB_UPLOAD_URL: '/api/vben/upload',
 		VITE_GLOB_API_URL_PREFIX: '',
 		VITE_PUBLIC_PATH: 'https://vue-vben-admin-v2.pages.dev',
 	};

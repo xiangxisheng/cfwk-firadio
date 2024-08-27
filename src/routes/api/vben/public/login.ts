@@ -35,12 +35,13 @@ app.post('/', async (c) => {
 	if (user['status'] !== 1) {
 		return cJson(c, { code: -1, type: 'error', message: '用户状态异常', result: null });
 	}
+	const user_id = Number(user['id']);
 	const token = crypto.randomUUID();
 	const insert = {
 		created: Date.now(),
 		logged: Date.now(),
 		token: await md5(token),
-		user_id: Number(user['id']),
+		user_id,
 		status: 1,
 	};
 	const sqlResult = await oCFD1.all(oCFD1.sql().from('pre_system_sessions').set(insert).buildInsert());
@@ -51,7 +52,7 @@ app.post('/', async (c) => {
 		oCFD1
 			.sql()
 			.from('pre_system_users')
-			.where([['id=?', [user.id]]])
+			.where([['id=?', [user_id]]])
 			.set({ logged: Date.now() })
 			.buildUpdate()
 	);
