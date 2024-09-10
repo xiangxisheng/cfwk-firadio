@@ -76,6 +76,29 @@ export class D1PreparedStatement {
 			results,
 		};
 	}
+	private stmtRun(): Promise<sqlite3.RunResult> {
+		return new Promise((resolve, reject) => {
+			const stmt = this.db.prepare(this.query);
+			stmt.on('error', (err) => {
+				return reject(err);
+			});
+			stmt.bind(...this.bindValues);
+			stmt.run(function (this: sqlite3.RunResult) {
+				resolve(this);
+			});
+			stmt.finalize();
+		});
+	}
+	async run() {
+		const result = (await this.stmtRun());
+		return {
+			success: true,
+			meta: {
+				last_row_id: result.lastID,
+				changes: result.changes,
+			},
+		};
+	}
 }
 
 export class D1Database {

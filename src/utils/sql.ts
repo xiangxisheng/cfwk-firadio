@@ -194,6 +194,13 @@ export function SQL() {
 			mData.aBuildParam = aValue;
 			return oSql;
 		},
+		buildDelete() {
+			const aSql: string[] = [];
+			aSql.push(`DELETE FROM ${mData.sFrom}`);
+			putWhere(aSql);
+			mData.sBuildSql = aSql.join(' ');
+			return oSql;
+		},
 		getSQL() {
 			// 获取预编译用到的SQL语句
 			if (!mData.sBuildSql) {

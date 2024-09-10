@@ -104,14 +104,14 @@ app.post('/resetpwd', async (c) => {
 		.buildSelect();
 	console.log('执行的SQL语句', oCFD1.getSQL(oSqlUser));
 	const user = await oCFD1.first(oSqlUser);
-	if (!user) {
+	if (!user || !user.id) {
 		return cJson(c, { code: -1, type: 'error', message: `您输入的[${email}]尚未注册`, result: null });
 	}
 	const sqlResult = await oCFD1.all(
 		oCFD1
 			.sql()
 			.from('pre_system_users')
-			.where([['id=?', [user.id]]])
+			.where([['id=?', [user.id.toString()]]])
 			.set({ updated: Date.now(), login_password: await md5(password) })
 			.buildUpdate()
 	);

@@ -29,6 +29,10 @@ export class CFD1 {
 		// 获取一条
 		return await this.bindSqlParam(oSql).first();
 	}
+	async run(oSql: any) {
+		// 例如执行 INSERT 或 UPDATE
+		return await this.bindSqlParam(oSql).run();
+	}
 	async begin() {
 		// 开始事务处理
 		return await this.DB.exec('BEGIN TRANSACTION');
