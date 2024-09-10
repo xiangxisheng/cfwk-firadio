@@ -7,4 +7,6 @@ prisma/migrations
 ~*
 *~
 wrangler.toml
-/build
+/build/node_sqlite3.node
+/build/server.js
+/build/server.js.map
