@@ -1,0 +1,27 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./avue.db"
+}
+
+model pre_avue_gen_tables {
+  id         Int     @id
+  createTime String?
+  updateTime String?
+  name       String  @unique
+  desc       String
+  out        String
+  avueCrud   String
+}
+
+model pre_avue_gen_columns {
+  id           Int    @id
+  gen_table_id Int
+  data         String
+
+  @@index([gen_table_id])
+}

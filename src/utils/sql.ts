@@ -70,7 +70,24 @@ export function SQL() {
 			mData.isLock = true;
 			return oSql;
 		},
-		set(mSet: Record<string, string | number | undefined | null>) {
+		set(_mSet: Record<string, unknown>) {
+			const mSet: Record<string, string | number | null> = {};
+			for (const k in _mSet) {
+				const v = _mSet[k];
+				if (v === null) {
+					mSet[k] = v;
+					continue;
+				}
+				if (typeof (v) === 'string') {
+					mSet[k] = v;
+					continue;
+				}
+				if (typeof (v) === 'number') {
+					mSet[k] = v;
+					continue;
+				}
+				mSet[k] = JSON.stringify(v);
+			}
 			if (mSet.length === 0) {
 				throw new Error('mSet不能为空');
 			}
