@@ -93,16 +93,10 @@ app.route('/api', require('./api').default);
 
 app.get('*', async (c, next) => {
 	// 获取短链接的配置
+	// 1: 解析URL
 	const oUrl = new URL(c.req.url);
-	if (oUrl.pathname.indexOf('/', 1) !== -1) {
-		// 跳过，因为短链接没有二级目录
-		return await next();
-	}
-	if (oUrl.pathname.indexOf('.') !== -1) {
-		// 跳过，因为短链接没有扩展名
-		return await next();
-	}
 	const aSubDomain = getPartsOfDomain(oUrl.hostname);
+	// 2: 顶级域名自动跳转到www
 	if (aSubDomain.length === 2) {
 		// 顶级域名要跳转到带www的二级域名
 		if (oUrl.pathname === '/') {
@@ -110,9 +104,14 @@ app.get('*', async (c, next) => {
 		}
 	}
 	const aLinkName = getPartsOfPathname(oUrl.pathname);
-	const sRootLinkName = aLinkName[0] ?? '';
-	if (!sRootLinkName) {
-		return;
+	if (aLinkName.length !== 1) {
+		// 跳过，因为短链接没有二级目录
+		return await next();
+	}
+	const sRootLinkName = aLinkName[0];
+	if (!/^[0-9A-Za-z_-]+$/.test(sRootLinkName)) {
+		// 跳过，如果不符合短链接的名称规则
+		return await next();
 	}
 	const oCFD1 = new CFD1(c.env.DB);
 	const oSqlLinks = oCFD1
@@ -125,19 +124,21 @@ app.get('*', async (c, next) => {
 		.where([['name=?', [sRootLinkName]]])
 		.buildSelect();
 	const rLink = await oCFD1.first(oSqlLinks);
-	if (rLink) {
-		// 找到对应的链接名称
-		const clientIP = c.req.header('CF-Connecting-IP');
-		const sUserIpCrc32 = clientIP ? crc32(clientIP).toString(16) : '';
-		if (aSubDomain.length === 2) {
-			// 如果访问了顶级域名，就跳转至带IP验证的二级域名
-			return Response.redirect(`${oUrl.protocol}//${sUserIpCrc32}.${aSubDomain[1]}.${aSubDomain[0]}${oUrl.pathname}`);
-		}
-		if (sUserIpCrc32 !== aSubDomain[2]) {
-			return c.html('该链接不存在或已失效', 404);
-		}
-		return c.html(renderHtml({ title: rLink['title']?.toString() ?? '', url: rLink['url']?.toString() ?? '' }));
+	if (!rLink) {
+		// 没有查到短链接
+		return await next();
 	}
+	// 找到对应的链接名称
+	const clientIP = c.req.header('CF-Connecting-IP');
+	const sUserIpCrc32 = clientIP ? crc32(clientIP).toString(16) : '';
+	if (aSubDomain.length === 2) {
+		// 如果访问了顶级域名，就跳转至带IP验证的二级域名
+		return Response.redirect(`${oUrl.protocol}//${sUserIpCrc32}.${aSubDomain[1]}.${aSubDomain[0]}${oUrl.pathname}`);
+	}
+	if (sUserIpCrc32 !== aSubDomain[2]) {
+		return c.html('该链接不存在或已失效', 404);
+	}
+	return c.html(renderHtml({ title: rLink['title']?.toString() ?? '', url: rLink['url']?.toString() ?? '' }));
 });
 
 app.route('/', require('@/utils/route/vben').default);

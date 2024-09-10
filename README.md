@@ -1,3 +1,29 @@
+# Cloudflare Worker
+
+
+## 关于测试服务器运行方法
+### 1：首先安装Node.js模块
+```
+npm install
+```
+
+### 2：复制SQLite依赖
+```
+copy node_modules\sqlite3\build\Release\node_sqlite3.node build
+```
+
+### 3：导入表结构
+```
+npx prisma db push
+npx prisma db push --schema=./prisma/avue.prisma
+npx prisma db push --schema=./prisma/bee.prisma
+```
+
+### 4：运行测试服务器
+```
+npm run serve
+```
+
 
 ## 关于重新生成数据库SQL
 ```
