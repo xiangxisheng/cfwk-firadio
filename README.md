@@ -9,7 +9,8 @@ npm install
 
 ### 2：复制SQLite依赖
 ```
-copy node_modules\sqlite3\build\Release\node_sqlite3.node build
+mkdir build
+copy /y node_modules\sqlite3\build\Release\node_sqlite3.node build\
 ```
 
 ### 3：导入表结构
