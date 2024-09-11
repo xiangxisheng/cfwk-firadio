@@ -19,9 +19,20 @@ model pre_avue_gen_tables {
 }
 
 model pre_avue_gen_columns {
-  id           Int    @id
-  gen_table_id Int
-  data         String
+  id          Int    @id
+  gen_tableId Int
+  data        String
 
-  @@index([gen_table_id])
+  @@index([gen_tableId])
+}
+
+model pre_system_users {
+  id             Int    @id @default(autoincrement())
+  created        Int // 用户注册时间
+  updated        Int? // 更新时间(密码修改/冻结时间)
+  logged         Int? // 最后登录时间
+  login_name     String @unique // 登录名称(可以是用户名|邮箱|手机号码|QQ号码)
+  login_password String // 用户的登录密码
+  status         Int    @default(0) // 状态(0:未知,1:正常,2:已冻结)
+  roles          String @default("user") // 用户所示角色组(user,admin)
 }

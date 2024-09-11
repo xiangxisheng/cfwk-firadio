@@ -3,81 +3,103 @@ import { CFD1 } from '@/utils/cfd1';
 
 const app = Route();
 
-app.post('/gen_table', async (c) => {
-	const oCFD1 = new CFD1(c.env.DB);
-	const data = await c.req.json();
-	const oSqlInsert = oCFD1.sql().from('pre_avue_gen_tables');
-	oSqlInsert.set({
-		name: data.name,
-		desc: data.desc,
-		out: {
-			"view": "page",
-			"type": "lib"
-		},
-		avueCrud: {
-			"option": {
-				"index": false,
-				"menu": true,
-				"addBtn": true,
-				"editBtn": true,
-				"delBtn": true,
-				"viewBtn": true
-			}
-		},
-	}).buildInsert();
-	const r2 = await oCFD1.run(oSqlInsert);
-	if (!r2.success) {
-		return c.json({
-			"code": "400",
-			"success": false,
-			"data": {}
-		});
+function getPathInfo(_path: string) {
+	const path = _path.match(/([a-z_/]+)\/([0-9]+)/);
+	if (!path) {
+		throw new Error('path错误');
 	}
-	if (!r2.meta.last_row_id) {
-		return c.json({
-			"code": "404",
-			"success": false,
-			"data": {}
-		});
-	}
-	return c.json({
-		"code": "201",
-		"success": true,
-		"data": {
-			id: r2.meta.last_row_id,
-		}
-	});
-});
+	return {
+		name: path[1],
+		id: path[2]
+	};
+}
 
-app.get('/gen_table', async (c) => {
+interface TableColumn {
+	prop: string,
+	label?: string,
+	format?: string,
+	default?: object,
+}
+
+async function getTableInfo(oCFD1: CFD1, name: string) {
+	const rowTable = (await oCFD1.first(oCFD1.sql().from('pre_avue_gen_tables').where([['name=?', [name]]]).buildSelect()));
+	if (!rowTable) {
+		throw new Error(`表名称name=[${name}]未找到`);
+	}
+	if (!rowTable.id) {
+		throw new Error(`表名称name=[${name}]未找到,没有ID号`);
+	}
+	const gen_tableId = rowTable.id.toString();
+	const rows = (await oCFD1.all(oCFD1.sql().from('pre_avue_gen_columns').where([['gen_tableId=?', [gen_tableId]]]).buildSelect())).results;
+	const cols: Array<TableColumn> = [];
+	for (const row of rows) {
+		if (row.data) {
+			cols.push(JSON.parse(row.data.toString()));
+		}
+	}
+	//console.log(cols);
+	const ret = { table: '', cols, jsonField: '' };
+	if (rowTable.out) {
+		const out = JSON.parse(rowTable.out.toString());
+		ret.table = out.table?.toString();
+		ret.jsonField = out.jsonField?.toString();
+	}
+	return ret;
+}
+
+app.get(':path{([a-z_]+/)+[0-9]+}', async (c) => {
+	const { name, id } = getPathInfo(c.req.param('path'));
+	//console.log(`name=${name}, id=${id}`);
 	const oCFD1 = new CFD1(c.env.DB);
-	const oSql = oCFD1.sql().from('pre_avue_gen_tables');
+	const { table, cols } = await getTableInfo(oCFD1, name);
+	const oSql = oCFD1.sql().from(table);
 	const limit = Number(c.req.query('pageSize') || 10);
 	const offset = (Number(c.req.query('page') || 1) - 1) * limit;
-	const results = (await oCFD1.all(oSql.select({}).limit(limit).offset(offset).buildSelect())).results;
-	for (const result of results) {
-		result.out = JSON.parse(result.out?.toString() ?? "{}");
-		result.avueCrud = JSON.parse(result.avueCrud?.toString() ?? "{}");
+	const select: Record<string, string> = {};
+	select['id'] = 'id';
+	const colSet: Record<string, TableColumn> = {};
+	for (const col of cols) {
+		if (!col.prop) {
+			continue;
+		}
+		colSet[col.prop] = col;
+		select[col.prop] = col.prop;
+	}
+	const data = (await oCFD1.first(oSql.select(select).where([['id=?', [id]]]).limit(limit).offset(offset).buildSelect()));
+	for (const fieldName in data) {
+		if (!colSet[fieldName]) {
+			continue;
+		}
+		if (colSet[fieldName].format === 'json') {
+			data[fieldName] = JSON.parse(data[fieldName]?.toString() ?? "{}");
+		}
 	}
 	return c.json({
 		"code": "200",
 		"success": true,
-		"data": {
-			"count": (await oCFD1.first(oSql.select({ 'count': 'COUNT(*)' }).buildSelect()))?.count,
-			results
-		}
+		data
 	});
-});
-
-app.put('/gen_table/:id', async (c) => {
+}).put(async (c) => {
+	const { name, id } = getPathInfo(c.req.param('path'));
+	//console.log(`name=${name}, id=${id}`);
 	const oCFD1 = new CFD1(c.env.DB);
-	const oSql = oCFD1.sql().from('pre_avue_gen_tables');
+	const { table, jsonField } = await getTableInfo(oCFD1, name);
+	const oSql = oCFD1.sql().from(table);
 	const data = await c.req.json();
 	delete data['id'];
 	delete data['$cellEdit'];
 	delete data['$index'];
-	const r2 = await oCFD1.run(oSql.set(data).where([
-		['id=?', [c.req.param('id')]],
+	delete data['gen_tableId'];
+	const set = (() => {
+		if (jsonField) {
+			const set: Record<string, unknown> = {};
+			set[jsonField] = data;
+			return set;
+		}
+		return data;
+	})();
+	const r2 = await oCFD1.run(oSql.set(set).where([
+		['id=?', [id]],
 	]).buildUpdate());
 	if (!r2.success) {
 		return c.json({
@@ -91,13 +113,14 @@ app.put('/gen_table/:id', async (c) => {
 		"success": true,
 		"data": {}
 	});
-});
-
-app.delete('/gen_table/:id', async (c) => {
+}).delete(async (c) => {
+	const { name, id } = getPathInfo(c.req.param('path'));
+	//console.log(`name=${name}, id=${id}`);
 	const oCFD1 = new CFD1(c.env.DB);
-	const oSql = oCFD1.sql().from('pre_avue_gen_tables');
+	const { table } = await getTableInfo(oCFD1, name);
+	const oSql = oCFD1.sql().from(table);
 	oSql.where([
-		['id=?', [c.req.param('id')]],
+		['id=?', [id]],
 	])
 	const r2 = await oCFD1.run(oSql.buildDelete());
 	if (!r2.success) {
@@ -114,16 +137,64 @@ app.delete('/gen_table/:id', async (c) => {
 	});
 });
 
-app.post('/gen_column', async (c) => {
+app.get(':path{([a-z_]+/)*([a-z_]+)}', async (c) => {
+	const name = c.req.param('path');
 	const oCFD1 = new CFD1(c.env.DB);
+	const { table, cols, jsonField } = await getTableInfo(oCFD1, name);
+	const oSql = oCFD1.sql().from(table);
+	const limit = Number(c.req.query('pageSize') || 10);
+	const offset = (Number(c.req.query('page') || 1) - 1) * limit;
+	const where: Array<[string, Array<string | number>]> = [];
+	for (const col of cols) {
+		const propVal = c.req.query(col.prop);
+		if (propVal) {
+			where.push([`${col.prop}=?`, [propVal]]);
+		}
+	}
+	const results = (await oCFD1.all(oSql.select({}).where(where).limit(limit).offset(offset).buildSelect())).results;
+	if (jsonField) {
+		for (const result of results) {
+			if (result.data) {
+				delete result.gen_tableId;
+				const data = JSON.parse(result.data.toString());
+				delete result.data;
+				for (const k in data) {
+					result[k] = data[k];
+				}
+			}
+		}
+	} else {
+		for (const result of results) {
+			//result.out = JSON.parse(result.out?.toString() ?? "{}");
+			//result.avueCrud = JSON.parse(result.avueCrud?.toString() ?? "{}");
+		}
+	}
+	return c.json({
+		"code": "200",
+		"success": true,
+		"data": {
+			"count": (await oCFD1.first(oSql.select({ 'count': 'COUNT(*)' }).buildSelect()))?.count,
+			results
+		}
+	});
+}).post(async (c) => {
+	const name = c.req.param('path');
+	const oCFD1 = new CFD1(c.env.DB);
+	const { table, cols, jsonField } = await getTableInfo(oCFD1, name);
 	const data = await c.req.json();
-	const oSqlInsert = oCFD1.sql().from('pre_avue_gen_columns');
-	const gen_table_id = data.gen_tableId;
-	delete data.gen_tableId;
-	oSqlInsert.set({
-		gen_table_id,
-		data,
-	}).buildInsert();
+	const oSqlInsert = oCFD1.sql().from(table);
+	const set: Record<string, unknown> = {};
+	for (const col of cols) {
+		if (!col.prop) {
+			continue;
+		}
+		set[col.prop] = data[col.prop] ? data[col.prop] : col.default;
+		delete data[col.prop];
+	}
+	if (jsonField) {
+		set[jsonField] = data;
+	}
+	oSqlInsert.set(set).buildInsert();
 	const r2 = await oCFD1.run(oSqlInsert);
 	if (!r2.success) {
 		return c.json({
@@ -145,78 +216,6 @@ app.post('/gen_column', async (c) => {
 		"data": {
 			id: r2.meta.last_row_id,
 		}
-	});
-});
-
-app.get('/gen_column', async (c) => {
-	const oCFD1 = new CFD1(c.env.DB);
-	const oSql = oCFD1.sql().from('pre_avue_gen_columns');
-	const limit = Number(c.req.query('pageSize') || 10);
-	const offset = (Number(c.req.query('page') || 1) - 1) * limit;
-	const results = (await oCFD1.all(oSql.select({}).limit(limit).offset(offset).buildSelect())).results;
-	for (const result of results) {
-		if (typeof (result.data) === 'string') {
-			delete result.gen_table_id;
-			const data = JSON.parse(result.data);
-			delete result.data;
-			for (const k in data) {
-				result[k] = data[k];
-			}
-		}
-	}
-	return c.json({
-		"code": "200",
-		"success": true,
-		"data": {
-			"count": (await oCFD1.first(oSql.select({ 'count': 'COUNT(*)' }).buildSelect()))?.count,
-			results
-		}
-	});
-});
-
-app.put('/gen_column/:id', async (c) => {
-	const oCFD1 = new CFD1(c.env.DB);
-	const oSql = oCFD1.sql().from('pre_avue_gen_columns');
-	const data = await c.req.json();
-	delete data['id'];
-	delete data['gen_tableId'];
-	const r2 = await oCFD1.run(oSql.set({
-		data
-	}).where([
-		['id=?', [c.req.param('id')]],
-	]).buildUpdate());
-	if (!r2.success) {
-		return c.json({
-			"code": "400",
-			"success": false,
-			"data": {}
-		});
-	}
-	return c.json({
-		"code": "200",
-		"success": true,
-		"data": {}
-	});
-});
-
-app.delete('/gen_column/:id', async (c) => {
-	const oCFD1 = new CFD1(c.env.DB);
-	const oSql = oCFD1.sql().from('pre_avue_gen_columns');
-	oSql.where([
-		['id=?', [c.req.param('id')]],
-	])
-	const r2 = await oCFD1.run(oSql.buildDelete());
-	if (!r2.success) {
-		return c.json({
-			"code": "400",
-			"success": false,
-			"data": {}
-		});
-	}
-	return c.json({
-		"code": "200",
-		"success": true,
-		"data": {}
 	});
 });
 
