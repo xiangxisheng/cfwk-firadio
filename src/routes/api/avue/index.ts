@@ -68,7 +68,8 @@ async function getTableInfo(oCFD1: CFD1, name: string): Promise<TableInfo> {
 }
 
 async function moveTableSeq(oSql: SQL, id: number, _move: number) {
-	oSql.select({ id: 'id' }).orderBy([['seq', 'asc']]).buildSelect();
+	const results = oSql.select({ id: 'id' }).orderBy([['seq', 'asc']]).buildSelect().getStmt().all();
+	console.log(results);
 }
 
 function getColSet(cols: Array<TableColumn>) {
@@ -199,17 +200,15 @@ app.get(':path{([a-z_]+/)*([a-z_]+)}', async (c) => {
 		}
 	}
 	const { colSet, select } = getColSet(cols);
-	const results = ((results) => {
-		for (const result of results) {
-			procColumnData(colSet, result);
-		}
-		return results;
-	})((await oCFD1.all(oCFD1.sql().select(select).from(table).where(where).limit(limit).offset(offset).buildSelect())).results);
+	const results = (await oCFD1.sql().select(select).from(table).where(where).limit(limit).offset(offset).buildSelect().getStmt().all()).results;
+	for (const result of results) {
+		procColumnData(colSet, result);
+	}
 	return c.json({
 		"code": "200",
 		"success": true,
 		"data": {
-			"count": (await oCFD1.first(oCFD1.sql().select({ 'count': 'COUNT(*)' }).from(table).where(where).buildSelect()))?.count,
+			"count": (await oCFD1.sql().select({ 'count': 'COUNT(*)' }).from(table).where(where).buildSelect().getStmt().first())?.count,
 			results,
 		}
 	});

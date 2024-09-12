@@ -6,32 +6,32 @@ export class CFD1 {
 		this.DB = DB;
 	}
 	sql() {
-		return new SQL();
+		return new SQL(this);
 	}
-	getSQL(oSql: any) {
+	getSQL(oSql: SQL) {
 		return oSql.getSQL();
 	}
-	getParam(oSql: any) {
+	getParam(oSql: SQL) {
 		return oSql.getParam();
 	}
-	getStmt(oSql: any) {
+	prepare(oSql: SQL) {
 		return this.DB.prepare(oSql.getSQL());
 	}
-	bindSqlParam(oSql: any) {
-		const stmt = this.getStmt(oSql);
+	getStmt(oSql: SQL) {
+		const stmt = this.prepare(oSql);
 		return stmt.bind.apply(stmt, oSql.getParam());
 	}
-	async all(oSql: any) {
+	async all(oSql: SQL) {
 		// 获取全部
-		return await this.bindSqlParam(oSql).all();
+		return await this.getStmt(oSql).all();
 	}
-	async first(oSql: any) {
+	async first(oSql: SQL) {
 		// 获取一条
-		return await this.bindSqlParam(oSql).first();
+		return await this.getStmt(oSql).first();
 	}
-	async run(oSql: any) {
+	async run(oSql: SQL) {
 		// 例如执行 INSERT 或 UPDATE
-		return await this.bindSqlParam(oSql).run();
+		return await this.getStmt(oSql).run();
 	}
 	async begin() {
 		// 开始事务处理

@@ -1,3 +1,5 @@
+import { CFD1 } from "./cfd1";
+
 interface SqlParam {
 	mSelect?: Record<string, string>;
 	sFrom: string;
@@ -15,6 +17,7 @@ interface SqlParam {
 
 export class SQL {
 	//取得sql实例
+	private oCFD1: CFD1;
 	private mData: SqlParam = {
 		sFrom: '',
 		isLock: false,
@@ -37,6 +40,14 @@ export class SQL {
 	private quoteSQLName(field: string): string {
 		return '[' + field + ']';
 	};
+
+	constructor(oCFD1: CFD1) {
+		this.oCFD1 = oCFD1;
+	}
+
+	public getStmt() {
+		return this.oCFD1.getStmt(this);
+	}
 
 	public from(sFrom: string) {
 		this.mData.sFrom = sFrom;
