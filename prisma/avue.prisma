@@ -27,6 +27,35 @@ model pre_avue_gen_columns {
   @@index([gen_tableId])
 }
 
+// 系统配置
+model pre_system_configs {
+  id    Int    @id @default(autoincrement())
+  name  String @unique
+  value String // JSON格式存储
+}
+
+// 系统菜单
+model pre_system_menus {
+  id        Int     @id @default(autoincrement())
+  created   Int
+  updated   Int?
+  status    Int
+  parent_id Int
+  type      Int
+  name      String
+  title     String
+  path      String?
+  icon      String?
+  component String?
+  orderNo   Int
+  keepalive Int
+  redirect  String?
+  meta      String?
+
+  @@unique([parent_id, name])
+}
+
+// 系统用户
 model pre_system_users {
   id             Int    @id @default(autoincrement())
   created        Int // 用户注册时间
@@ -36,4 +65,17 @@ model pre_system_users {
   login_password String // 用户的登录密码
   status         Int    @default(0) // 状态(0:未知,1:正常,2:已冻结)
   roles          String @default("user") // 用户所示角色组(user,admin)
+}
+
+// 系统用户会话
+model pre_system_sessions {
+  id      Int    @id @default(autoincrement())
+  created Int
+  updated Int? // 更新时间(登入/登出时间)
+  logged  Int? // 最后登录时间
+  token   String @unique
+  user_id Int // 登录的用户id
+  status  Int    @default(0) // 状态(0:未知,1:正常,2:已登出)
+
+  @@index([user_id])
 }

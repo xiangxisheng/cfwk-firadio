@@ -31,6 +31,14 @@ model mails {
   body_html   String?
 }
 
+// 系统配置
+model pre_system_configs {
+  id    Int    @id @default(autoincrement())
+  name  String @unique
+  value String // JSON格式存储
+}
+
+// 系统菜单
 model pre_system_menus {
   id        Int     @id @default(autoincrement())
   created   Int
@@ -49,13 +57,6 @@ model pre_system_menus {
   meta      String?
 
   @@unique([parent_id, name])
-}
-
-// 系统配置
-model pre_system_configs {
-  id    Int    @id @default(autoincrement())
-  name  String @unique
-  value String // JSON格式存储
 }
 
 // 系统用户
