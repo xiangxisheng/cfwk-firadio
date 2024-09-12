@@ -21,7 +21,7 @@ model pre_avue_gen_tables {
 model pre_avue_gen_columns {
   id          Int    @id
   gen_tableId Int
-  data        String
+  option      String
   seq         Int? // 顺序
 
   @@index([gen_tableId])

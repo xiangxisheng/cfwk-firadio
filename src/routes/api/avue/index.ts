@@ -1,5 +1,6 @@
 import { Route } from '@/utils/route';
 import { CFD1 } from '@/utils/cfd1';
+import { SQL } from '@/utils/sql';
 
 const app = Route();
 
@@ -10,17 +11,20 @@ function getPathInfo(_path: string) {
 	}
 	return {
 		name: path[1],
-		id: path[2]
+		id: Number(path[2]),
 	};
 }
 
 interface TableInfo {
 	table: string,
 	cols: Array<TableColumn>,
-	jsonField: string,
 }
 
 interface TableColumn {
+	option: TableColumnOption,
+}
+
+interface TableColumnOption {
 	prop: string,
 	label?: string,
 	format?: string,
@@ -30,12 +34,15 @@ interface TableColumn {
 }
 
 async function getColumn(oCFD1: CFD1, gen_tableId: number): Promise<Array<TableColumn>> {
-	const rows = (await oCFD1.all(oCFD1.sql().from('pre_avue_gen_columns').where([['gen_tableId=?', [gen_tableId]]]).buildSelect())).results;
+	const rows = (await oCFD1.all(oCFD1.sql().select({ option: 'option' }).from('pre_avue_gen_columns').where([['gen_tableId=?', [gen_tableId]]]).buildSelect())).results;
 	const cols: Array<TableColumn> = [];
 	for (const row of rows) {
-		if (row.data) {
-			cols.push(JSON.parse(row.data.toString()));
+		if (!row.option) {
+			continue;
 		}
+		cols.push({
+			option: JSON.parse(row.option.toString())
+		});
 	}
 	return cols;
 }
@@ -55,10 +62,37 @@ async function getTableInfo(oCFD1: CFD1, name: string): Promise<TableInfo> {
 	const cols = await getColumn(oCFD1, Number(rowTable.id));
 	const ret: TableInfo = {
 		table: out.table,
-		jsonField: out.jsonField,
 		cols,
 	};
 	return ret;
+}
+
+async function moveTableSeq(oSql: SQL, id: number, _move: number) {
+	oSql.select({ id: 'id' }).orderBy([['seq', 'asc']]).buildSelect();
+}
+
+function getColSet(cols: Array<TableColumn>) {
+	const select: Record<string, string> = {};
+	const colSet: Record<string, TableColumn> = {};
+	for (const col of cols) {
+		if (!col.option.prop) {
+			continue;
+		}
+		colSet[col.option.prop] = col;
+		select[col.option.prop] = col.option.prop;
+	}
+	return { colSet, select };
+}
+
+function procColumnData(colSet: Record<string, TableColumn>, data: Record<string, unknown>) {
+	for (const fieldName in data) {
+		if (!colSet[fieldName]) {
+			continue;
+		}
+		if (colSet[fieldName].option.format === 'json') {
+			data[fieldName] = JSON.parse(data[fieldName]?.toString() ?? "{}");
+		}
+	}
 }
 
 app.get(':path{([a-z_]+/)+[0-9]+}', async (c) => {
@@ -69,28 +103,12 @@ app.get(':path{([a-z_]+/)+[0-9]+}', async (c) => {
 	const oSql = oCFD1.sql().from(table);
 	const limit = Number(c.req.query('pageSize') || 10);
 	const offset = (Number(c.req.query('page') || 1) - 1) * limit;
-	const select: Record<string, string> = {};
-	select['id'] = 'id';
-	const colSet: Record<string, TableColumn> = {};
-	for (const col of cols) {
-		if (!col.prop) {
-			continue;
-		}
-		colSet[col.prop] = col;
-		select[col.prop] = col.prop;
-	}
+	const { colSet, select } = getColSet(cols);
 	const data = (await oCFD1.first(oSql.select(select).where([['id=?', [id]]]).limit(limit).offset(offset).buildSelect()));
 	if (!data) {
 		throw new Error(`id=[${id}]没有找到这条记录`);
 	}
-	for (const fieldName in data) {
-		if (!colSet[fieldName]) {
-			continue;
-		}
-		if (colSet[fieldName].format === 'json') {
-			data[fieldName] = JSON.parse(data[fieldName]?.toString() ?? "{}");
-		}
-	}
+	procColumnData(colSet, data);
 	if (c.req.query('_embed') === 'gen_column') {
 		data.gen_column = await getColumn(oCFD1, Number(id));
 	}
@@ -103,22 +121,19 @@ app.get(':path{([a-z_]+/)+[0-9]+}', async (c) => {
 	const { name, id } = getPathInfo(c.req.param('path'));
 	//console.log(`name=${name}, id=${id}`);
 	const oCFD1 = new CFD1(c.env.DB);
-	const { table, jsonField } = await getTableInfo(oCFD1, name);
+	const { table } = await getTableInfo(oCFD1, name);
 	const oSql = oCFD1.sql().from(table);
+	const _move = c.req.query('_move');
+	if (_move) {
+		await moveTableSeq(oSql, id, Number(_move));
+		return c.json({
+			"code": "200",
+			"success": true,
+			"data": {}
+		});
+	}
 	const data = await c.req.json();
-	delete data['id'];
-	delete data['$cellEdit'];
-	delete data['$index'];
-	const set = (() => {
-		if (data['gen_tableId'] && jsonField) {
-			delete data['gen_tableId'];
-			const set: Record<string, unknown> = {};
-			set[jsonField] = data;
-			return set;
-		}
-		return data;
-	})();
-	const r2 = await oCFD1.run(oSql.set(set).where([
+	const r2 = await oCFD1.run(oSql.set(data).where([
 		['id=?', [id]],
 	]).buildUpdate());
 	if (!r2.success) {
@@ -158,56 +173,35 @@ app.get(':path{([a-z_]+/)+[0-9]+}', async (c) => {
 });
 
 function getValue(post: any, col: TableColumn) {
-	if (post[col.prop]) {
-		return post[col.prop];
+	if (post[col.option.prop]) {
+		return post[col.option.prop];
 	}
-	if (col.default) {
-		return col.default;
+	if (col.option.default) {
+		return col.option.default;
 	}
 	return null;
-}
-
-function getJsonResult(results: Record<string, unknown>[], jsonField: string) {
-	const rows: Array<Record<string, unknown>> = [];
-	for (const result of results) {
-		const json = result[jsonField]?.toString();
-		if (json) {
-			const data = JSON.parse(json.toString());
-			data.id = result.id;
-			rows.push(data);
-		}
-	}
-	return rows;
 }
 
 app.get(':path{([a-z_]+/)*([a-z_]+)}', async (c) => {
 	const name = c.req.param('path');
 	const oCFD1 = new CFD1(c.env.DB);
-	const { table, cols, jsonField } = await getTableInfo(oCFD1, name);
+	const { table, cols } = await getTableInfo(oCFD1, name);
 	const limit = Number(c.req.query('pageSize') || 10);
 	const offset = (Number(c.req.query('page') || 1) - 1) * limit;
 	const where: Array<[string, Array<string | number>]> = [];
-	const select: Record<string, string> = {};
-	select['id'] = 'id';
-	const colSet: Record<string, TableColumn> = {};
 	for (const col of cols) {
-		if (!col.prop) {
+		if (!col.option.prop) {
 			continue;
 		}
-		const propVal = c.req.query(col.prop);
+		const propVal = c.req.query(col.option.prop);
 		if (propVal) {
-			where.push([`${col.prop}=?`, [propVal]]);
+			where.push([`${col.option.prop}=?`, [propVal]]);
 		}
-		colSet[col.prop] = col;
-		select[col.prop] = col.prop;
 	}
+	const { colSet, select } = getColSet(cols);
 	const results = ((results) => {
-		if (c.req.query('gen_tableId') && jsonField) {
-			return getJsonResult(results, jsonField);
-		}
 		for (const result of results) {
-			//result.out = JSON.parse(result.out?.toString() ?? "{}");
-			//result.avueCrud = JSON.parse(result.avueCrud?.toString() ?? "{}");
+			procColumnData(colSet, result);
 		}
 		return results;
 	})((await oCFD1.all(oCFD1.sql().select(select).from(table).where(where).limit(limit).offset(offset).buildSelect())).results);
@@ -222,20 +216,16 @@ app.get(':path{([a-z_]+/)*([a-z_]+)}', async (c) => {
 }).post(async (c) => {
 	const name = c.req.param('path');
 	const oCFD1 = new CFD1(c.env.DB);
-	const { table, cols, jsonField } = await getTableInfo(oCFD1, name);
+	const { table, cols } = await getTableInfo(oCFD1, name);
 	const data = await c.req.json();
-	const gen_tableId = data['gen_tableId'];
 	const oSqlInsert = oCFD1.sql().from(table);
 	const set: Record<string, unknown> = {};
 	for (const col of cols) {
-		if (!col.prop) {
+		if (!col.option.prop) {
 			continue;
 		}
-		set[col.prop] = getValue(data, col);
-		delete data[col.prop];
-	}
-	if (gen_tableId && jsonField) {
-		set[jsonField] = data;
+		set[col.option.prop] = getValue(data, col);
+		delete data[col.option.prop];
 	}
 	oSqlInsert.set(set).buildInsert();
 	const r2 = await oCFD1.run(oSqlInsert);

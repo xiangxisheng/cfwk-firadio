@@ -6,7 +6,7 @@ export class CFD1 {
 		this.DB = DB;
 	}
 	sql() {
-		return SQL();
+		return new SQL();
 	}
 	getSQL(oSql: any) {
 		return oSql.getSQL();
