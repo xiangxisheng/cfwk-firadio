@@ -42,7 +42,7 @@ app.use('*', async (c, next) => {
 				.from('pre_system_configs')
 				.where([['name=?', [name]]])
 				.buildSelect();
-			//console.log('执行的SQL语句', oCFD1.getSQL(oSqlConfig));
+			//console.log('执行的SQL语句', oSqlConfig.getSQL());
 			const rConfig = await oCFD1.first(oSqlConfig);
 			if (!rConfig) {
 				return {};
@@ -54,7 +54,7 @@ app.use('*', async (c, next) => {
 			const jData = JSON.stringify(data);
 			console.log('save', name, jData);
 			const oSqlConfig = oCFD1.sql().from('pre_system_configs').conflict({ name }).set({ value: jData }).buildUpsert();
-			console.log('执行的SQL语句', oCFD1.getSQL(oSqlConfig));
+			console.log('执行的SQL语句', oSqlConfig.getSQL());
 			const sqlResult = await oCFD1.all(oSqlConfig);
 			if (!sqlResult.success) {
 				console.log('sqlResult', sqlResult);

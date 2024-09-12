@@ -134,9 +134,9 @@ app.get(':path{([a-z_]+/)+[0-9]+}', async (c) => {
 		});
 	}
 	const data = await c.req.json();
-	const r2 = await oCFD1.run(oSql.set(data).where([
+	const r2 = await oSql.set(data).where([
 		['id=?', [id]],
-	]).buildUpdate());
+	]).buildUpdate().getStmt().run();
 	if (!r2.success) {
 		return c.json({
 			"code": "400",
@@ -158,7 +158,7 @@ app.get(':path{([a-z_]+/)+[0-9]+}', async (c) => {
 	oSql.where([
 		['id=?', [id]],
 	])
-	const r2 = await oCFD1.run(oSql.buildDelete());
+	const r2 = await oSql.buildDelete().getStmt().run();
 	if (!r2.success) {
 		return c.json({
 			"code": "400",
@@ -227,7 +227,7 @@ app.get(':path{([a-z_]+/)*([a-z_]+)}', async (c) => {
 		delete data[col.option.prop];
 	}
 	oSqlInsert.set(set).buildInsert();
-	const r2 = await oCFD1.run(oSqlInsert);
+	const r2 = await oSqlInsert.getStmt().run();
 	if (!r2.success) {
 		return c.json({
 			"code": "400",

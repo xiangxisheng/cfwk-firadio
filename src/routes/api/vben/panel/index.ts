@@ -23,7 +23,7 @@ app.use('*', async (c, next) => {
 		.from('pre_system_sessions')
 		.where([['token=?', [token]]])
 		.buildSelect();
-	console.log('执行的SQL语句', oCFD1.getSQL(oSqlSession));
+	console.log('执行的SQL语句', oSqlSession.getSQL());
 	const session = await oCFD1.first(oSqlSession);
 	if (!session) {
 		return cJson(c, { code: 401, type: 'error', message: '会话失效', result: null });
@@ -43,9 +43,9 @@ app.use('*', async (c, next) => {
 		.sql()
 		.select(selectUser)
 		.from('pre_system_users')
-		.where([['id=?', [session['user_id']]]])
+		.where([['id=?', [Number(session['user_id'])]]])
 		.buildSelect();
-	console.log('执行的SQL语句', oCFD1.getSQL(oSqlUser));
+	console.log('执行的SQL语句', oSqlUser.getSQL());
 	const user = await oCFD1.first(oSqlUser);
 	if (!user) {
 		return cJson(c, { code: 401, type: 'error', message: '用户不存在', result: null });

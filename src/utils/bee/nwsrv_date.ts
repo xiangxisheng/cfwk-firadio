@@ -122,7 +122,7 @@ export class NwsrvDate {
 			})
 			.conflict({ customerid: nwsrvDateInfo.customerid, by_date: nwsrvDateInfo.by_date })
 			.buildUpsert();
-		//console.log('插入数据库表的SQL语句', this.oCFD1.getSQL(oSqlUpsert));
+		//console.log('插入数据库表的SQL语句', oSqlUpsert.getSQL());
 		await this.oCFD1.all(oSqlUpsert);
 	}
 
@@ -138,7 +138,7 @@ export class NwsrvDate {
 				[`[${fieldName}]IS NULL`, []],
 			])
 			.buildUpdate();
-		//console.log('SQL语句', this.oCFD1.getSQL(oSqlUpdate));
+		//console.log('SQL语句', oSqlUpdate.getSQL());
 		await this.oCFD1.all(oSqlUpdate);
 	}
 

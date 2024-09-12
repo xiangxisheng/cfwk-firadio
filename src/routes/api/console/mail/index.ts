@@ -29,7 +29,7 @@ app.get('/', async (c) => {
 	oSql.offset(Number(c.req.query('offset') || 0));
 	oSql.limit(Number(c.req.query('limit') || 10));
 	oSql.buildSelect();
-	console.log('执行的SQL语句', oCFD1.getSQL(oSql));
+	console.log('执行的SQL语句', oSql.getSQL());
 	return c.json((await oCFD1.all(oSql)).results);
 });
 
@@ -45,7 +45,7 @@ app.get('/:id', async (c) => {
 	aWhere.push(['id=?', [id]]);
 	oSql.where(aWhere);
 	oSql.buildSelect();
-	console.log('执行的SQL语句', oCFD1.getSQL(oSql));
+	console.log('执行的SQL语句', oSql.getSQL());
 	const results = await oCFD1.first(oSql);
 	if (!results) {
 		return c.json({ message: `Id(${id}) Not found` }, 404);

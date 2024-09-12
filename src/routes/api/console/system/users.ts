@@ -166,11 +166,11 @@ app.get('/', async (c) => {
 		const oSql = oCFD1.sql();
 		oSql.select(select);
 		oSql.from(table.from);
-		oSql.orderBy(['user_id DESC']);
+		oSql.orderBy([['user_id', 'DESC']]);
 		oSql.offset(Number(c.req.query('offset') || 0));
 		oSql.limit(Number(c.req.query('limit') || 10));
 		oSql.buildSelect();
-		console.log('执行的SQL语句', oCFD1.getSQL(oSql));
+		console.log('执行的SQL语句', oSql.getSQL());
 		table.dataSource = (await oCFD1.all(oSql)).results;
 	}
 	if (action === 'init') {
@@ -206,8 +206,8 @@ app.post('/', async (c) => {
 				mAddData[column.dataIndex] = jsonReq[column.dataIndex];
 			}
 		}
-		const oSql = oCFD1.sql().from(table.from).buildInsert(mAddData);
-		console.log('插入数据库表的SQL语句', oCFD1.getSQL(oSql), oCFD1.getParam(oSql));
+		const oSql = oCFD1.sql().from(table.from).set(mAddData).buildInsert();
+		console.log('插入数据库表的SQL语句', oSql.getSQL(), oSql.getParam());
 		const r2 = await oCFD1.all(oSql);
 		if (r2.success) {
 			console.log('用户添加成功', r2);

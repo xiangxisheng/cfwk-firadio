@@ -21,7 +21,7 @@ app.post('/', async (c) => {
 		.from('pre_system_users')
 		.where([['login_name=?', [username]]])
 		.buildSelect();
-	console.log('执行的SQL语句', oCFD1.getSQL(oSqlUser));
+	console.log('执行的SQL语句', oSqlUser.getSQL());
 	const user = await oCFD1.first(oSqlUser);
 	if (!user) {
 		return cJson(c, { code: -1, type: 'error', message: `您输入的[${username}]不存在`, result: null });

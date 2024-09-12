@@ -158,7 +158,7 @@ export default async (message: ForwardableEmailMessage, env: Env, ctx: Execution
 	}
 	const oCFD1 = new CFD1(env.DB);
 	const oSql = oCFD1.sql().from('mails').set(mMsgData).buildInsert();
-	console.log('插入数据库表的SQL语句', oCFD1.getSQL(oSql));
+	console.log('插入数据库表的SQL语句', oSql.getSQL());
 	const r2 = await oCFD1.all(oSql);
 	if (r2.success) {
 		console.log('邮件保存成功');

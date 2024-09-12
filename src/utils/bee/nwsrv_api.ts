@@ -14,7 +14,7 @@ export class NwsrvApi {
 			.select({ no: 'no' })
 			.orderBy([['no', 'DESC']])
 			.buildSelect();
-		//console.log('执行的SQL语句', oCFD1.getSQL(oSqlSelect));
+		//console.log('执行的SQL语句', oSqlSelect.getSQL());
 		const record = await this.oCFD1.first(oSqlSelect);
 		var log_id_begin = 189154; //8月份的第一条
 		log_id_begin = 5897;
@@ -38,7 +38,7 @@ export class NwsrvApi {
 					changeby: log['change_by'],
 				};
 				const oSqlInsert = this.oCFD1.sql().from('pre_bee_logs').set(record).buildInsert();
-				//console.log('插入数据库表的SQL语句', oCFD1.getSQL(oSqlInsert));
+				//console.log('插入数据库表的SQL语句', oSqlInsert.getSQL());
 				const r2 = await this.oCFD1.all(oSqlInsert);
 				if (r2.success) {
 				}

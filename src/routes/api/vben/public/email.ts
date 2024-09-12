@@ -28,7 +28,7 @@ app.post('/otp', async (c) => {
 		.from('pre_system_users')
 		.where([['login_name=?', [email]]])
 		.buildSelect();
-	console.log('执行的SQL语句', oCFD1.getSQL(oSqlUser));
+	console.log('执行的SQL语句', oSqlUser.getSQL());
 	const user = await oCFD1.first(oSqlUser);
 	switch (action) {
 		case 'register':
@@ -72,7 +72,7 @@ app.post('/register', async (c) => {
 		.from('pre_system_users')
 		.where([['login_name=?', [email]]])
 		.buildSelect();
-	console.log('执行的SQL语句', oCFD1.getSQL(oSqlUser));
+	console.log('执行的SQL语句', oSqlUser.getSQL());
 	const user = await oCFD1.first(oSqlUser);
 	if (user) {
 		return cJson(c, { code: -1, type: 'error', message: `您输入的[${email}]已经注册过了，请直接登录或重设密码`, result: null });
@@ -102,7 +102,7 @@ app.post('/resetpwd', async (c) => {
 		.from('pre_system_users')
 		.where([['login_name=?', [email]]])
 		.buildSelect();
-	console.log('执行的SQL语句', oCFD1.getSQL(oSqlUser));
+	console.log('执行的SQL语句', oSqlUser.getSQL());
 	const user = await oCFD1.first(oSqlUser);
 	if (!user || !user.id) {
 		return cJson(c, { code: -1, type: 'error', message: `您输入的[${email}]尚未注册`, result: null });
