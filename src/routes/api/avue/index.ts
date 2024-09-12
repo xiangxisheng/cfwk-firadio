@@ -18,6 +18,7 @@ function getPathInfo(_path: string) {
 interface TableInfo {
 	table: string,
 	cols: Array<TableColumn>,
+	orderBy: Array<[string, string]>,
 }
 
 interface TableColumn {
@@ -34,7 +35,11 @@ interface TableColumnOption {
 }
 
 async function getColumn(oCFD1: CFD1, gen_tableId: number): Promise<Array<TableColumn>> {
-	const rows = (await oCFD1.all(oCFD1.sql().select({ option: 'option' }).from('pre_avue_gen_columns').where([['gen_tableId=?', [gen_tableId]]]).buildSelect())).results;
+	const oSql = oCFD1.sql();
+	oSql.select({ option: 'option' }).from('pre_avue_gen_columns').where([['gen_tableId=?', [gen_tableId]]]);
+	oSql.orderBy([['seq', 'ASC']]);
+	oSql.buildSelect();
+	const rows = (await oSql.getStmt().all()).results;
 	const cols: Array<TableColumn> = [];
 	for (const row of rows) {
 		if (!row.option) {
@@ -63,13 +68,35 @@ async function getTableInfo(oCFD1: CFD1, name: string): Promise<TableInfo> {
 	const ret: TableInfo = {
 		table: out.table,
 		cols,
+		orderBy: out.orderBy,
 	};
 	return ret;
 }
 
+function moveElement<T>(arr: T[], target: T, offset: number) {
+	// 判断arr里面是否存在target
+	const index = arr.indexOf(target);
+	if (index === -1) {
+		// 不存在就不处理
+		return;
+	}
+	// 计算新位置
+	const newIndex = Math.max(0, Math.min(index + offset, arr.length - 1));
+	// 先移除目标元素，再插入新位置
+	arr.splice(newIndex, 0, arr.splice(index, 1)[0]);
+}
+
 async function moveTableSeq(oSql: SQL, id: number, _move: number) {
-	const results = oSql.select({ id: 'id' }).orderBy([['seq', 'asc']]).buildSelect().getStmt().all();
-	console.log(results);
+	const results = (await oSql.select({ id: 'id' }).orderBy([['seq', 'asc']]).buildSelect().getStmt().all()).results;
+	const result: number[] = results.map(item => Number(item.id));
+	moveElement(result, id, _move);
+	var i = 0;
+	for (const id of result) {
+		i++;
+		const oSqlUpdate = oSql.where([['id=?', [id]]]).set({ seq: i }).buildUpdate();
+		const rr = await oSqlUpdate.getStmt().run();
+		console.log(oSqlUpdate.getSQL(), oSqlUpdate.getParam(), rr);
+	}
 }
 
 function getColSet(cols: Array<TableColumn>) {
@@ -123,9 +150,15 @@ app.get(':path{([a-z_]+/)+[0-9]+}', async (c) => {
 	//console.log(`name=${name}, id=${id}`);
 	const oCFD1 = new CFD1(c.env.DB);
 	const { table } = await getTableInfo(oCFD1, name);
-	const oSql = oCFD1.sql().from(table);
+	const oSql = oCFD1.sql().from(table).where([['id=?', [id]]]);
+	const result = await oSql.buildSelect().getStmt().first();
 	const _move = c.req.query('_move');
-	if (_move) {
+	if (_move && result && result['gen_tableId']) {
+		oSql.where([['gen_tableId=?', [Number(result['gen_tableId'])]]]);
+		if (1) {
+			oSql.buildSelect();
+			console.log(oSql.getSQL(), oSql.getParam());
+		}
 		await moveTableSeq(oSql, id, Number(_move));
 		return c.json({
 			"code": "200",
@@ -134,9 +167,7 @@ app.get(':path{([a-z_]+/)+[0-9]+}', async (c) => {
 		});
 	}
 	const data = await c.req.json();
-	const r2 = await oSql.set(data).where([
-		['id=?', [id]],
-	]).buildUpdate().getStmt().run();
+	const r2 = await oSql.set(data).where([['id=?', [id]]]).buildUpdate().getStmt().run();
 	if (!r2.success) {
 		return c.json({
 			"code": "400",
@@ -186,7 +217,7 @@ function getValue(post: any, col: TableColumn) {
 app.get(':path{([a-z_]+/)*([a-z_]+)}', async (c) => {
 	const name = c.req.param('path');
 	const oCFD1 = new CFD1(c.env.DB);
-	const { table, cols } = await getTableInfo(oCFD1, name);
+	const { table, cols, orderBy } = await getTableInfo(oCFD1, name);
 	const limit = Number(c.req.query('pageSize') || 10);
 	const offset = (Number(c.req.query('page') || 1) - 1) * limit;
 	const where: Array<[string, Array<string | number>]> = [];
@@ -200,7 +231,11 @@ app.get(':path{([a-z_]+/)*([a-z_]+)}', async (c) => {
 		}
 	}
 	const { colSet, select } = getColSet(cols);
-	const results = (await oCFD1.sql().select(select).from(table).where(where).limit(limit).offset(offset).buildSelect().getStmt().all()).results;
+	const oSql = oCFD1.sql().select(select).from(table).where(where).limit(limit).offset(offset);
+	if (orderBy) {
+		oSql.orderBy(orderBy);
+	}
+	const results = (await oSql.buildSelect().getStmt().all()).results;
 	for (const result of results) {
 		procColumnData(colSet, result);
 	}
