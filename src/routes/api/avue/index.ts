@@ -73,7 +73,7 @@ async function getTableInfo(oCFD1: CFD1, name: string): Promise<TableInfo> {
 	return ret;
 }
 
-function moveElement<T>(arr: T[], target: T, offset: number) {
+function moveElement<T>(arr: T[], target: T, offset: number): void {
 	// 判断arr里面是否存在target
 	const index = arr.indexOf(target);
 	if (index === -1) {
@@ -86,7 +86,7 @@ function moveElement<T>(arr: T[], target: T, offset: number) {
 	arr.splice(newIndex, 0, arr.splice(index, 1)[0]);
 }
 
-async function moveTableSeq(oSql: SQL, id: number, _move: number) {
+async function moveTableSeq(oSql: SQL, id: number, _move: number): Promise<void> {
 	const results = (await oSql.select({ id: 'id' }).orderBy([['seq', 'asc']]).buildSelect().getStmt().all()).results;
 	const result: number[] = results.map(item => Number(item.id));
 	moveElement(result, id, _move);
@@ -100,6 +100,7 @@ async function moveTableSeq(oSql: SQL, id: number, _move: number) {
 }
 
 function getColSet(cols: Array<TableColumn>) {
+	// 取得【列】和【SELECT】的设置
 	const select: Record<string, string> = {};
 	const colSet: Record<string, TableColumn> = {};
 	for (const col of cols) {
@@ -112,7 +113,8 @@ function getColSet(cols: Array<TableColumn>) {
 	return { colSet, select };
 }
 
-function procColumnData(colSet: Record<string, TableColumn>, data: Record<string, unknown>) {
+function procColumnData(colSet: Record<string, TableColumn>, data: Record<string, unknown>): void {
+	// 处理列的数据，无返回值
 	for (const fieldName in data) {
 		if (!colSet[fieldName]) {
 			continue;
@@ -204,7 +206,8 @@ app.get(':path{([a-z_]+/)+[0-9]+}', async (c) => {
 	});
 });
 
-function getValue(post: any, col: TableColumn) {
+function getValue(post: any, col: TableColumn): any {
+	// 新增记录时，取得每个列的值，用于写入数据库，返回任意类型的数据
 	if (post[col.option.prop]) {
 		return post[col.option.prop];
 	}
@@ -259,7 +262,7 @@ app.get(':path{([a-z_]+/)*([a-z_]+)}', async (c) => {
 			continue;
 		}
 		set[col.option.prop] = getValue(data, col);
-		delete data[col.option.prop];
+		//delete data[col.option.prop];
 	}
 	oSqlInsert.set(set).buildInsert();
 	const r2 = await oSqlInsert.getStmt().run();
