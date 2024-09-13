@@ -53,7 +53,7 @@ async function getColumn(oCFD1: CFD1, gen_tableId: number): Promise<Array<TableC
 }
 
 async function getTableInfo(oCFD1: CFD1, name: string): Promise<TableInfo> {
-	const rowTable = (await oCFD1.first(oCFD1.sql().from('pre_avue_gen_tables').where([['name=?', [name]]]).buildSelect()));
+	const rowTable = (await oCFD1.sql().from('pre_avue_gen_tables').where([['name=?', [name]]]).buildSelect().getStmt().first());
 	if (!rowTable) {
 		throw new Error(`表名称name=[${name}]未找到`);
 	}
@@ -134,7 +134,7 @@ app.get(':path{([a-z_]+/)+[0-9]+}', async (c) => {
 	const limit = Number(c.req.query('pageSize') || 10);
 	const offset = (Number(c.req.query('page') || 1) - 1) * limit;
 	const { colSet, select } = getColSet(cols);
-	const data = (await oCFD1.first(oSql.select(select).where([['id=?', [id]]]).limit(limit).offset(offset).buildSelect()));
+	const data = (await oSql.select(select).where([['id=?', [id]]]).limit(limit).offset(offset).buildSelect().getStmt().first());
 	if (!data) {
 		throw new Error(`id=[${id}]没有找到这条记录`);
 	}
