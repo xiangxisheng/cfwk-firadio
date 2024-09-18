@@ -41,6 +41,7 @@ app.route('/console', require('./console').default);
 app.route('/bee', require('./bee').default);
 app.route('/vben', require('./vben').default);
 app.route('/avue', require('./avue').default);
+app.route('/gjw', require('./gjw').default);
 
 app.get('/', (c) => {
 	return c.text('当前是API接口的首页');

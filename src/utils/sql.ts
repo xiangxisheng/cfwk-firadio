@@ -1,4 +1,4 @@
-import { CFD1 } from "./cfd1";
+import { CFD1 } from './cfd1';
 
 interface SqlParam {
 	mSelect?: Record<string, string>;
@@ -36,10 +36,10 @@ export class SQL {
 				aSql.push(`WHERE (${aWhereSql.join(')AND(')})`);
 			}
 		}
-	};
+	}
 	private quoteSQLName(field: string): string {
 		return '[' + field + ']';
-	};
+	}
 
 	constructor(oCFD1: CFD1) {
 		this.oCFD1 = oCFD1;
@@ -52,35 +52,35 @@ export class SQL {
 	public from(sFrom: string) {
 		this.mData.sFrom = sFrom;
 		return this;
-	};
+	}
 	public select(mSelect: Record<string, string>) {
 		this.mData.mSelect = mSelect;
 		return this;
-	};
+	}
 	public where(aWhere: Array<[string, Array<string | number>]>) {
 		this.mData.aWhere = aWhere;
 		return this;
-	};
+	}
 	public groupBy(aGroupBy: Array<string>) {
 		this.mData.aGroupBy = aGroupBy;
 		return this;
-	};
+	}
 	public orderBy(aOrderBy: Array<[string, string]>) {
 		this.mData.aOrderBy = aOrderBy;
 		return this;
-	};
+	}
 	public limit(iLimit: number) {
 		this.mData.iLimit = iLimit;
 		return this;
-	};
+	}
 	public offset(iOffset: number) {
 		this.mData.iOffset = iOffset;
 		return this;
-	};
+	}
 	public lock() {
 		this.mData.isLock = true;
 		return this;
-	};
+	}
 	public set(_mSet: Record<string, unknown>) {
 		const mSet: Record<string, string | number | null> = {};
 		for (const k in _mSet) {
@@ -89,11 +89,11 @@ export class SQL {
 				mSet[k] = v;
 				continue;
 			}
-			if (typeof (v) === 'string') {
+			if (typeof v === 'string') {
 				mSet[k] = v;
 				continue;
 			}
-			if (typeof (v) === 'number') {
+			if (typeof v === 'number') {
 				mSet[k] = v;
 				continue;
 			}
@@ -104,14 +104,14 @@ export class SQL {
 		}
 		this.mData.mSet = mSet;
 		return this;
-	};
+	}
 	public conflict(mConflict: Record<string, string | number>) {
 		if (mConflict.length === 0) {
 			throw new Error('mConflict不能为空');
 		}
 		this.mData.mConflict = mConflict;
 		return this;
-	};
+	}
 	public buildSelect() {
 		// 构建[SELECT]查询语句
 		this.mData.aBuildParam = new Array<any>();
@@ -119,7 +119,7 @@ export class SQL {
 		const aSelect = new Array<string>();
 		for (const k in this.mData.mSelect) {
 			const v = this.mData.mSelect[k];
-			aSelect.push(`${v} AS ${k}`);
+			aSelect.push(`${v} AS ${this.quoteSQLName(k)}`);
 		}
 		aSql.push(`SELECT ${aSelect.length === 0 ? '*' : aSelect.join(',')}`);
 		if (this.mData.sFrom === undefined) {
@@ -152,7 +152,7 @@ export class SQL {
 		}
 		this.mData.sBuildSql = aSql.join(' ');
 		return this;
-	};
+	}
 	public buildInsert() {
 		// 构建[INSERT]SQL语句
 		if (this.mData.mSet === undefined) {
@@ -165,7 +165,7 @@ export class SQL {
 		this.mData.sBuildSql = `INSERT INTO ${this.quoteSQLName(this.mData.sFrom)} (${columns}) VALUES (${placeholders})`;
 		this.mData.aBuildParam = Array.from(Object.values(this.mData.mSet));
 		return this;
-	};
+	}
 	public buildUpdate() {
 		// 构建[UPDATE]SQL语句
 		this.mData.aBuildParam = new Array<any>();
@@ -187,7 +187,7 @@ export class SQL {
 		this.putWhere(aSql);
 		this.mData.sBuildSql = aSql.join(' ');
 		return this;
-	};
+	}
 	public buildUpsert() {
 		// 构建[INSERT]SQL语句
 		const columns: string[] = [];
@@ -221,23 +221,23 @@ export class SQL {
 		)}) DO UPDATE SET ${updateSets.join(',')}`;
 		this.mData.aBuildParam = aValue;
 		return this;
-	};
+	}
 	public buildDelete() {
 		const aSql: string[] = [];
 		aSql.push(`DELETE FROM ${this.mData.sFrom}`);
 		this.putWhere(aSql);
 		this.mData.sBuildSql = aSql.join(' ');
 		return this;
-	};
+	}
 	public getSQL() {
 		// 获取预编译用到的SQL语句
 		if (!this.mData.sBuildSql) {
 			throw new Error('[getSQL]前要先[build...]');
 		}
 		return this.mData.sBuildSql;
-	};
+	}
 	public getParam() {
 		// 获取绑定参数用到的参数列表
 		return this.mData.aBuildParam;
-	};
+	}
 }
