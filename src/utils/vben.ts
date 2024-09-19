@@ -1,10 +1,9 @@
-
 interface IResponseData {
-	code: number,
-	type: 'success' | 'error',
-	message: string,
-	result: any,
-};
+	code: number;
+	type: 'success' | 'error';
+	message: string;
+	result: any;
+}
 
 export class ResponseData extends Error {
 	responseData: IResponseData;
@@ -16,11 +15,11 @@ export class ResponseData extends Error {
 
 export class ResponseMessage extends Error {
 	resultData: IResponseData;
-	constructor(message: string) {
+	constructor(message: string, code: number = 0) {
 		super();
 		this.resultData = {
-			code: 0,
-			type: 'success',
+			code,
+			type: code === 0 ? 'success' : 'error',
 			message,
 			result: null,
 		};
@@ -34,4 +33,3 @@ export function cJson(c: any, data: IResponseData) {
 	}
 	return c.json(data, status);
 }
-

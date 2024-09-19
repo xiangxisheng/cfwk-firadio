@@ -31,6 +31,7 @@ model pre_system_users {
   username String @unique // 登录名称(可以是用户名|邮箱|手机号码|QQ号码)
   password String // 用户的登录密码
   status   Int    @default(0) // 状态(0:未知,1:正常,2:已冻结)
+  roles    String @default("user") // 用户所示角色组(user,admin)
 }
 
 // 系统用户会话

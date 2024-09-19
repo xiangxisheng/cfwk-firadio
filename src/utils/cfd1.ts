@@ -15,11 +15,11 @@ export class CFD1 {
 		const stmt = this.prepare(oSql);
 		return stmt.bind.apply(stmt, oSql.getParam());
 	}
-	public async all(oSql: SQL) {
+	public async all<T = Record<string, unknown>>(oSql: SQL): Promise<D1Result<T>> {
 		// 获取全部
 		return await this.getStmt(oSql).all();
 	}
-	public async first(oSql: SQL) {
+	public async first<T = Record<string, unknown>>(oSql: SQL): Promise<T | null> {
 		// 获取一条
 		return await this.getStmt(oSql).first();
 	}
