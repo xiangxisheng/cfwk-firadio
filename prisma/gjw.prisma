@@ -11,22 +11,24 @@ datasource db {
 // 语言包
 model pre_system_i18n_data {
   id           Int    @id @default(autoincrement())
-  created      Int
+  created      Int    @default(0)
   updated      Int?
+  deleted      Int    @default(0) // 0代表未删除
   group        String
   name         String
   locale_en_us String
   locale_zh_cn String
   locale_km_kh String
 
-  @@unique([group, name])
+  @@unique([group, name, deleted])
 }
 
 // 系统用户
 model pre_system_users {
   id       Int    @id @default(autoincrement())
-  created  Int // 用户注册时间
+  created  Int    @default(0) // 用户注册时间
   updated  Int? // 更新时间(密码修改/冻结时间)
+  deleted  Int    @default(0) // 0代表未删除
   logged   Int? // 最后登录时间
   username String @unique // 登录名称(可以是用户名|邮箱|手机号码|QQ号码)
   password String // 用户的登录密码
@@ -37,8 +39,9 @@ model pre_system_users {
 // 系统用户会话
 model pre_system_sessions {
   id      Int    @id @default(autoincrement())
-  created Int
+  created Int    @default(0) // 首次登录时间
   updated Int? // 更新时间(登入/登出时间)
+  deleted Int    @default(0) // 0代表未删除
   logged  Int? // 最后登录时间
   token   String @unique
   user_id Int // 登录的用户id
@@ -49,13 +52,19 @@ model pre_system_sessions {
 
 model pre_gjw_vpn_areas {
   // VPN地区
-  id    Int    @id
-  title String // 地区
+  id      Int    @id
+  created Int    @default(0) // 创建时间
+  updated Int? // 更新时间
+  deleted Int    @default(0) // 0代表未删除
+  title   String // 地区
 }
 
 model pre_gjw_vpn_server {
   // VPN服务器列表
   id            Int    @id
+  created       Int    @default(0) // 创建时间
+  updated       Int? // 更新时间
+  deleted       Int    @default(0) // 0代表未删除
   area_id       Int // 地区
   server_ipaddr String // 服务器IP地址
 
@@ -65,6 +74,9 @@ model pre_gjw_vpn_server {
 model pre_gjw_vpn_services {
   // VPN服务列表
   id            Int    @id
+  created       Int    @default(0) // 创建时间
+  updated       Int? // 更新时间
+  deleted       Int    @default(0) // 0代表未删除
   vpn_server_id String // 服务器编号
   type          String @default("hysteria2") // 服务类型，例如hysteria2
   server_port   Int // 服务器端口号
@@ -76,6 +88,9 @@ model pre_gjw_vpn_services {
 model pre_gjw_vpn_devices {
   // VPN设备列表
   id             Int    @id
+  created        Int    @default(0) // 创建时间
+  updated        Int? // 更新时间
+  deleted        Int    @default(0) // 0代表未删除
   title          String // 设备名称
   macaddr        String // MAC地址
   hdsn           String // 硬盘序列号
@@ -85,20 +100,24 @@ model pre_gjw_vpn_devices {
 model pre_gjw_vpn_clients {
   // VPN客户端列表
   id             Int    @id
+  created        Int    @default(0) // 创建时间
+  updated        Int? // 更新时间
+  deleted        Int    @default(0) // 0代表未删除
   vpn_service_id Int // VPN服务编号
   vpn_device_id  Int // VPN设备编号
   number         Int // 客户端号码范围1~250（同一个设备不重复）
   ipaddr         String @unique // 客户IP地址
 
-  @@unique([vpn_device_id, number])
+  @@unique([vpn_device_id, number, deleted])
   @@index([vpn_service_id])
 }
 
 model pre_gjw_vpn_clients_opers {
   // VPN客户端的操作申请
   id                       Int  @id
-  created                  Int
-  updated                  Int?
+  created                  Int  @default(0) // 创建时间
+  updated                  Int? // 更新时间
+  deleted                  Int  @default(0) // 0代表未删除
   vpn_client_id            Int // 服务的操作编号
   oper_vpn_service_id_from Int // 操作前的VPN服务ID
   oper_vpn_service_id_to   Int // 操作后的VPN服务ID
@@ -110,11 +129,12 @@ model pre_gjw_vpn_clients_opers {
 model pre_gjw_customers {
   // 客户列表
   id      Int     @id
-  created Int
-  updated Int?
+  created Int     @default(0) // 创建时间
+  updated Int? // 更新时间
+  deleted Int     @default(0) // 0代表未删除
   uid     Int
   name    String
-  remark  String?
+  detail  String? @default("{}")
 
   @@index([uid])
   @@index([name])
@@ -123,8 +143,9 @@ model pre_gjw_customers {
 model pre_gjw_customer_services {
   // 客户的服务列表
   id            Int  @id
-  created       Int
-  updated       Int?
+  created       Int  @default(0) // 创建时间
+  updated       Int? // 更新时间
+  deleted       Int  @default(0) // 0代表未删除
   uid           Int // 操作人
   customer_id   Int // 客户编号
   area_id       Int // 服务地区
@@ -144,8 +165,9 @@ model pre_gjw_customer_services {
 model pre_gjw_customer_service_opers {
   // 客户服务的操作申请
   id                  Int  @id
-  created             Int
-  updated             Int?
+  created             Int  @default(0) // 创建时间
+  updated             Int? // 更新时间
+  deleted             Int  @default(0) // 0代表未删除
   uid                 Int
   customer_service_id Int // 操作的服务编号
   oper_status_from    Int // 操作前的状态
@@ -163,8 +185,9 @@ model pre_gjw_customer_service_opers {
 model pre_gjw_customer_service_vpns {
   // 客户的VPN列表
   id                  Int  @id
-  created             Int
-  updated             Int?
+  created             Int  @default(0) // 创建时间
+  updated             Int? // 更新时间
+  deleted             Int  @default(0) // 0代表未删除
   uid                 Int // 操作人
   customer_service_id Int // 客户服务编号
   status              Int  @default(0) //操作状态（0:未操作,1:开启,2:关闭）
@@ -179,8 +202,9 @@ model pre_gjw_customer_service_vpns {
 model pre_gjw_customer_service_vpn_opers {
   // 客户VPN的操作申请
   id                       Int  @id
-  created                  Int
-  updated                  Int?
+  created                  Int  @default(0) // 创建时间
+  updated                  Int? // 更新时间
+  deleted                  Int  @default(0) // 0代表未删除
   customer_service_oper_id Int // 服务的操作编号
   customer_service_vpn_id  Int // VPN服务的编号
   oper_status_from         Int // 操作前的状态
