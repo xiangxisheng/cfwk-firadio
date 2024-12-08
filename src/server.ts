@@ -10,7 +10,8 @@ serve({
 		const aPath = oUrl.pathname.split('/');
 		let dbName = (() => {
 			if (aPath[1] === 'api') {
-				if (aPath[2] === 'vben') {
+				const dev_p2s = ['vben', 'console'];
+				if (dev_p2s.indexOf(aPath[2]) !== -1) {
 					return 'dev';
 				}
 				if (/^[a-z]+$/.test(aPath[2])) {
