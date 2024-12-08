@@ -1,7 +1,7 @@
 # Cloudflare Worker
 
 
-## 关于测试服务器运行方法
+## 一、测试服务器运行方法
 ### 1：首先安装Node.js模块
 ```
 npm install
@@ -25,18 +25,34 @@ npx prisma db push --schema=./prisma/bee.prisma
 npm run serve
 ```
 
+### 5：发布到生产服务器
+#### 1：编辑wrangler.toml文件
+将wrangler.toml.example复制到wrangler.toml，然后编辑环境变量和数据库绑定
 
-## 关于重新生成数据库SQL
+#### 2：重新生成类型
+```
+npx wrangler types
+```
+
+#### 3:发布
+```
+npx wrangler deploy
+```
+
+
+## 二、数据库的部署
+
+### 1：重新生成数据库SQL
 ```
 npx prisma migrate diff --from-empty --to-schema-datamodel ./prisma/schema.prisma --script > migrations/0001_create_table_all.sql
 ```
 
-## 导入SQL文件
+### 2：导入SQL文件
 ```
 npx wrangler d1 execute cfd1-firadio-wnam --remote --file migrations/0002_init_record.sql
 ```
 
-## 关于更新数据库 migrations
+## 三、更新数据库 migrations
 
 ### 1、首先编辑[schema.prisma]文件，添加或修改相应的表结构，然后生成[类文件]
 ```
@@ -75,3 +91,4 @@ npx wrangler d1 migrations create cfd1-firadio-wnam create_table_all
 ```
 npx wrangler d1 migrations apply cfd1-firadio-wnam --remote
 ```
+

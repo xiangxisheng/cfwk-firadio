@@ -12,13 +12,13 @@ app.get('/', async (c) => {
 
 app.get('/DescribeInstances', async (c) => {
 	const requestParams = {
-		AccessKeyId: '',
+		AccessKeyId: c.env.AccessKeyId,
 		RegionId: 'cn-hangzhou',
 		Action: 'DescribeInstances',
 		PageSize: '1',
 		PageNumber: '1',
 	};
-	const a = await AliyunApi(requestParams, '');
+	const a = await AliyunApi(requestParams, c.env.AccessKeySecret);
 	return c.json(a);
 });
 

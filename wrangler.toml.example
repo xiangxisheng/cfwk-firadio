@@ -21,8 +21,10 @@ send_email = [
 # - https://developers.cloudflare.com/workers/wrangler/configuration/#environment-variables
 # Note: Use secrets to store sensitive data.
 # - https://developers.cloudflare.com/workers/configuration/secrets/
-# [vars]
+[vars]
 # MY_VARIABLE = "production_value"
+AccessKeyId = ""
+AccessKeySecret = ""
 
 # Bind the Workers AI model catalog. Run machine learning models, powered by serverless GPUs, on Cloudflare’s global network
 # Docs: https://developers.cloudflare.com/workers/wrangler/configuration/#workers-ai
@@ -113,5 +115,5 @@ send_email = [
 # index_name = "my-index"
 [[d1_databases]]
 binding = "DB" # i.e. available in your Worker on env.DB
-database_name = "cfd1-wnam"
-database_id = "ee051600-22ca-44b7-a270-db5db231168a"
+database_name = "cfd1-firadio-wnam"
+database_id = "6876c3ba-19a1-4160-9f01-e314af033254"
