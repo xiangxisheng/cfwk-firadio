@@ -23,3 +23,20 @@ export function html(content: HtmlContent) {
 </body>
 </html>`;
 }
+
+import { Route } from '@/utils/route';
+
+const app = Route();
+
+app.get('*', async (c, next) => {
+	const acceptHeader = c.req.header('accept') || '';
+	if (!acceptHeader.includes('text/html')) {
+		return next();
+	}
+	const config_site = await c.get('configs').site.data();
+	const content = new HtmlContent(config_site.title.value, []);
+	content.script_src = `https://hk.anan.cc:30338/bundle.js`;
+	return c.html(html(content));
+});
+
+export default app;

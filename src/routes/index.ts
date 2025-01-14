@@ -141,7 +141,7 @@ app.get('*', async (c, next) => {
 	return c.html(renderHtml({ title: rLink['title']?.toString() ?? '', url: rLink['url']?.toString() ?? '' }));
 });
 
-app.route('/', require('@/utils/route/vben').default);
+app.route('/', require('@/utils/route/react').default);
 
 app.get('/', (c) => {
 	const clientIP = c.req.header('CF-Connecting-IP');
