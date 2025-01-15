@@ -1,0 +1,90 @@
+generator client {
+    provider        = "prisma-client-js"
+    previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+    provider = "sqlite"
+    url      = "file:./bkdata.db"
+}
+
+// 1:系统配置
+model pre_system_configs {
+  id    Int    @id @default(autoincrement())
+  name  String @unique
+  value String // JSON格式存储
+}
+
+// 2:语言包
+model pre_system_i18n_data {
+    id           Int    @id @default(autoincrement())
+    created      Int    @default(0)
+    updated      Int?
+    deleted      Int    @default(0) // 0代表未删除
+    group        String
+    name         String
+    locale_en_us String
+    locale_zh_cn String
+    locale_km_kh String
+
+    @@unique([group, name, deleted])
+}
+
+// 3:系统用户
+model pre_system_users {
+    id       Int    @id @default(autoincrement())
+    created  Int    @default(0) // 用户注册时间
+    updated  Int? // 更新时间(密码修改/冻结时间)
+    deleted  Int    @default(0) // 0代表未删除
+    logged   Int? // 最后登录时间
+    username String @unique // 登录名称(可以是用户名|邮箱|手机号码|QQ号码)
+    password String // 用户的登录密码
+    status   Int    @default(0) // 状态(0:未知,1:正常,2:已冻结)
+    roles    String @default("user") // 用户所示角色组(user,admin)
+}
+
+// 4:系统用户会话
+model pre_system_sessions {
+    id      Int    @id @default(autoincrement())
+    created Int    @default(0) // 首次登录时间
+    updated Int? // 更新时间(登入/登出时间)
+    deleted Int    @default(0) // 0代表未删除
+    logged  Int? // 最后登录时间
+    token   String @unique
+    user_id Int // 登录的用户id
+    status  Int    @default(0) // 状态(0:未知,1:正常,2:已登出)
+
+    @@index([user_id])
+}
+
+// ==== bkdata ====
+
+model pre_bkdata_data_columns {
+    // 表列
+    id      Int    @id
+    created Int    @default(0) // 创建时间
+    updated Int? // 更新时间
+    deleted Int    @default(0) // 0代表未删除
+    name    String // 列名称
+    type    String // 列类型
+}
+
+model pre_bkdata_data_rows {
+    // 表行
+    id      Int  @id
+    created Int  @default(0) // 创建时间
+    updated Int? // 更新时间
+    deleted Int  @default(0) // 0代表未删除
+}
+
+model pre_bkdata_data_row_values {
+    // 表行值
+    id           Int    @id
+    created      Int    @default(0) // 创建时间
+    updated      Int? // 更新时间
+    deleted      Int    @default(0) // 0代表未删除
+    row_id       Int // 表行ID
+    colume_id    Int // 表列ID
+    value_number Int // 数值
+    value_string String // 字符串
+}

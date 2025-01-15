@@ -18,6 +18,7 @@ copy /y node_modules\sqlite3\build\Release\node_sqlite3.node build\
 npx prisma db push
 npx prisma db push --schema=./prisma/avue.prisma
 npx prisma db push --schema=./prisma/bee.prisma
+npx prisma db push --schema=./prisma/bkdata.prisma
 ```
 
 ### 4：运行测试服务器
