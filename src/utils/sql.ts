@@ -27,7 +27,13 @@ export class SQL {
 		if (this.mData.aWhere !== undefined) {
 			const aWhereSql = new Array<string>();
 			for (const aWhereOne of this.mData.aWhere) {
-				aWhereSql.push(aWhereOne[0]);
+				if (aWhereOne[1].length > 0 && !aWhereOne[0].includes('?') && aWhereOne[0].includes('(*)')) {
+					const s1 = '(' + new Array(aWhereOne[1].length).fill('?').join(',') + ')';
+					const s2 = aWhereOne[0].replace(/\(\*\)/g, s1);
+					aWhereSql.push(s2);
+				} else {
+					aWhereSql.push(aWhereOne[0]);
+				}
 				for (const val of aWhereOne[1]) {
 					this.mData.aBuildParam.push(val);
 				}

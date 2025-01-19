@@ -13,6 +13,25 @@ app.post('/', async (c) => {
     });
 });
 
+app.delete('/', async (c) => {
+    const oCFD1 = new CFD1(c.env.DB);
+    const oSql = oCFD1.sql().from('pre_bkdata_data_columns');
+    const json = await c.req.json();
+    oSql.where([
+        ['id IN (*)', json],
+    ])
+    const r = await oSql.buildDelete().getStmt().run();
+    if (!r.success) {
+        return c.json({
+            "code": "400",
+            "success": false,
+        });
+    }
+    return c.json({
+        message: '删除成功！',
+    });
+});
+
 app.get('/', async (c) => {
 
     const columns: ResJsonTableColumn[] = [
