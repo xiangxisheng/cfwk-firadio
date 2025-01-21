@@ -32,6 +32,34 @@ app.delete('/', async (c) => {
     });
 });
 
+app.get('/:id', async (c) => {
+    const id = c.req.param('id');
+    const oCFD1 = new CFD1(c.env.DB);
+    const oSql = oCFD1.sql().from('pre_bkdata_data_columns');
+    oSql.where([['id=?', [id]]]);
+    return c.json((await oSql.select({ id: 'id', name: 'name', type: 'type' }).buildSelect().getStmt().first()));
+});
+
+app.put('/:id', async (c) => {
+    const id = c.req.param('id');
+    const json = await c.req.json();
+
+    const oCFD1 = new CFD1(c.env.DB);
+    const oSql = oCFD1.sql().from('pre_bkdata_data_columns');
+    oSql.where([['id=?', [id]]]);
+    oSql.set(json);
+    const r = await oSql.buildUpdate().getStmt().run();
+    if (!r.success) {
+        return c.json({
+            "code": "400",
+            "success": false,
+        });
+    }
+    return c.json({
+        message: '修改成功！',
+    });
+});
+
 app.get('/', async (c) => {
 
     const columns: ResJsonTableColumn[] = [
