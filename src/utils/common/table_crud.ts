@@ -13,7 +13,7 @@ export default function (config: TableConfig) {
 		const set: Record<string, string | number> = {};
 		set.created = Date.now();
 		for (const col of config.columns) {
-			if (!col.form) {
+			if (!col.component) {
 				continue;
 			}
 			set[col.dataIndex] = json[col.dataIndex];
@@ -64,7 +64,7 @@ export default function (config: TableConfig) {
 		const set: Record<string, string | number> = {};
 		set.updated = Date.now();
 		for (const col of config.columns) {
-			if (!col.form) {
+			if (!col.component) {
 				continue;
 			}
 			set[col.dataIndex] = json[col.dataIndex];

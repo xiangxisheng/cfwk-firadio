@@ -1,3 +1,4 @@
+/* 前端类型定义开始 */
 export interface DataType extends Record<string, unknown> { }
 
 interface ResJsonTableColumnRule {
@@ -13,11 +14,13 @@ interface ResJsonTableColumnSelectOption {
 export interface ResJsonTableColumn {
 	dataIndex: string;
 	title: string;
-	form?: string;
+	component?: 'textbox' | 'url' | 'textarea' | 'select' | 'datepicker' | 'datepicker_rangepicker';
 	rules?: ResJsonTableColumnRule[];
 	ellipsis?: boolean;
 	placeholder?: string;
 	options?: ResJsonTableColumnSelectOption[];
+	dataType?: 'js_timestamp';
+	dayjsFormat?: string;
 }
 
 export interface ResJsonTableOption {
@@ -34,6 +37,7 @@ export interface ResJSON {
 	table?: ResJsonTable;
 	message?: string;
 }
+/* 前端类型定义结束 */
 
 export interface TableConfig {
 	name: string;
