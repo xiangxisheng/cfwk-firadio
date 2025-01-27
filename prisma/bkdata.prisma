@@ -10,9 +10,9 @@ datasource db {
 
 // 1:系统配置
 model pre_system_configs {
-  id    Int    @id @default(autoincrement())
-  name  String @unique
-  value String // JSON格式存储
+    id    Int    @id @default(autoincrement())
+    name  String @unique
+    value String // JSON格式存储
 }
 
 // 2:语言包
@@ -66,6 +66,7 @@ model pre_bkdata_data_columns {
     updated Int? // 更新时间
     deleted Int    @default(0) // 0代表未删除
     name    String // 列名称
+    title   String // 列标题
     type    String // 列类型
 }
 
