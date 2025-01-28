@@ -61,14 +61,14 @@ model pre_system_sessions {
 
 model pre_bkdata_data_columns {
     // 表列
-    id        Int     @id
-    created   Int     @default(0) // 创建时间
+    id        Int    @id
+    created   Int    @default(0) // 创建时间
     updated   Int? // 更新时间
-    deleted   Int     @default(0) // 0代表未删除
-    name      String // 列名称
+    deleted   Int    @default(0) // 0代表未删除
+    seq       Int // 列顺序
     title     String // 列标题
+    datatype  String //数据类型
     component String // 交互组件
-    date      String? // 日期
 }
 
 model pre_bkdata_data_rows {
@@ -81,12 +81,14 @@ model pre_bkdata_data_rows {
 
 model pre_bkdata_data_row_values {
     // 表行值
-    id           Int    @id
-    created      Int    @default(0) // 创建时间
-    updated      Int? // 更新时间
-    deleted      Int    @default(0) // 0代表未删除
-    row_id       Int // 表行ID
-    colume_id    Int // 表列ID
-    value_number Int // 数值
-    value_string String // 字符串
+    id             Int      @id
+    created        Int      @default(0) // 创建时间
+    updated        Int? // 更新时间
+    deleted        Int      @default(0) // 0代表未删除
+    row_id         Int // 表行ID
+    column_id      Int // 表列ID
+    value_int      Int // 整数
+    value_float    Float // 小数
+    value_string   String // 字符串
+    value_datetime DateTime // 字符串
 }

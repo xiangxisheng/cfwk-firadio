@@ -9,17 +9,19 @@ interface ResJsonTableColumnRule {
 interface ResJsonTableColumnSelectOption {
 	value: string;
 	text: string;
+	color?: string;
+	dataTypes?: string[];
 }
 
 export interface ResJsonTableColumn {
 	dataIndex: string;
 	title: string;
-	component?: 'textbox' | 'url' | 'textarea' | 'select' | 'datepicker' | 'datepicker_rangepicker';
+	component?: 'textbox' | 'url' | 'textarea' | 'select' | 'datepicker' | 'datepicker_rangepicker' | 'inputnumber';
 	rules?: ResJsonTableColumnRule[];
 	ellipsis?: boolean;
 	placeholder?: string;
 	options?: ResJsonTableColumnSelectOption[];
-	dataType?: 'js_timestamp';
+	dataType?: 'js_timestamp' | 'int' | 'float' | 'string' | 'datetime';
 	dayjsFormat?: string;
 }
 
@@ -35,6 +37,7 @@ export interface ResJsonTable {
 
 export interface ResJSON {
 	table?: ResJsonTable;
+	title?: string;
 	message?: string;
 }
 /* 前端类型定义结束 */
