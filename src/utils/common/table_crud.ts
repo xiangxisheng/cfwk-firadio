@@ -1,10 +1,16 @@
 import { Route } from '@/utils/route';
 import { CFD1 } from '@/utils/cfd1';
 import type { ResJSON, TableConfig } from '@/utils/common/api';
+import { delay } from '@/utils/common/api';
 
 export default function (config: TableConfig) {
 
 	const app = Route();
+
+	app.use(async (c, next) => {
+		await delay(1000);
+		return await next();
+	});
 
 	app.post('/', async (c) => {
 		const json = await c.req.json();

@@ -47,3 +47,9 @@ export interface TableConfig {
 	option: ResJsonTableOption;
 	columns: ResJsonTableColumn[];
 }
+
+// 创建一个延迟函数
+export function delay(ms: number) {
+	return new Promise(resolve => setTimeout(resolve, ms));
+}
+
