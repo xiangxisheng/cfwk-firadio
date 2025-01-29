@@ -71,7 +71,7 @@ export class SQL {
 		this.mData.aGroupBy = aGroupBy;
 		return this;
 	}
-	public orderBy(aOrderBy: Array<[string, string]>) {
+	public orderBy(aOrderBy: Array<[string, 'ASC' | 'DESC']>) {
 		this.mData.aOrderBy = aOrderBy;
 		return this;
 	}
