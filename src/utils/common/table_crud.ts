@@ -8,7 +8,7 @@ export default function (config: TableConfig) {
 	const app = Route();
 
 	app.use(async (c, next) => {
-		await delay(1000);
+		//await delay(1000);
 		return await next();
 	});
 
