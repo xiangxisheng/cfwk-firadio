@@ -4,7 +4,7 @@ import { delay, ResJSON, ResJsonTableColumn } from '@/utils/common/api';
 import type { ColumnComponentType, ColumnDataType } from '@/utils/common/api';
 const app = Route();
 
-function getItemByColumnJson(column: Record<string, unknown>, json: Record<string, unknown>): Record<string, unknown> {
+function getItemByColumnJson(column: Record<string, unknown>, json: Record<string, unknown>): Record<string, unknown> | undefined {
 	if (!column.id) {
 		throw new Error('no column.id');
 	}
@@ -13,10 +13,11 @@ function getItemByColumnJson(column: Record<string, unknown>, json: Record<strin
 	}
 	const jsonKey = `col_${column.id}`;
 	const val = json[jsonKey];
-	if (!val) {
-		throw new Error(`not found column.id[${jsonKey}] in json`);
-	}
 	const res: Record<string, unknown> = {};
+	if (!val) {
+		//throw new Error(`not found column.id[${jsonKey}] in json`);
+		return;
+	}
 	res[`value_${column.datatype.toString()}`] = val;
 	return res;
 }
@@ -27,7 +28,8 @@ function getValuesBase(columns: Record<string, unknown>[], json: Record<string, 
 		const jsonKey = `col_${column.id}`;
 		const val = json[jsonKey];
 		if (!val) {
-			throw new Error(`not found column.id[${jsonKey}] in json`);
+			//throw new Error(`not found column.id[${jsonKey}] in json`);
+			continue;
 		}
 		values_base[jsonKey] = val;
 	}
@@ -64,6 +66,9 @@ app.post('/', async (c) => {
 	const oSqlInsert2 = oCFD1.sql().from('pre_bkdata_data_row_values');
 	for (const column of columns) {
 		const item = getItemByColumnJson(column, json);
+		if (!item) {
+			continue;
+		}
 		oSqlInsert2.set({
 			...item,
 			column_id: column.id,
@@ -124,6 +129,9 @@ app.put('/:id', async (c) => {
 	const oSqlUpdate = oCFD1.sql().from('pre_bkdata_data_row_values');
 	for (const column of columns) {
 		const item = getItemByColumnJson(column, json);
+		if (!item) {
+			continue;
+		}
 		oSqlUpdate.where([['row_id=? AND column_id=?', [id, column.id as number]]]);
 		oSqlUpdate.conflict({ row_id: id, column_id: column.id as number });
 		oSqlUpdate.set({
@@ -195,7 +203,7 @@ app.get('/', async (c) => {
 			dataIndex: 'col_' + row.id?.toString() || '',
 			component: row.component as ColumnComponentType,
 			dataType: row.datatype as ColumnDataType,
-			rules: [{ required: true, message: `请输入[${row.title}]` }],
+			//rules: [{ required: true, message: `请输入[${row.title}]` }],
 			placeholder: `请输入[${row.title}]`,
 		};
 		if (column.dataType === 'datetime') {
