@@ -46,6 +46,7 @@ const config: TableConfig = {
 			{ value: 'select', text: '下拉菜单', color: 'purple', dataTypes: ['string'] },
 			{ value: 'inputnumber', text: '数字输入框', color: 'blue', dataTypes: ['int', 'float'] },
 			{ value: 'datepicker', text: '日期选择', color: 'volcano', dataTypes: ['datetime'] },
+			{ value: 'upload', text: '文件上传', color: 'volcano', dataTypes: ['string'] },
 		],
 		rules: [{ required: true, message: '请选择[交互组件]' }],
 		placeholder: '请选择[交互组件]',

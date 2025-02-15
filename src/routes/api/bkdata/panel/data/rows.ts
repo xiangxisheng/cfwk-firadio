@@ -4,6 +4,20 @@ import { delay, ResJSON, ResJsonTableColumn } from '@/utils/common/api';
 import type { ColumnComponentType, ColumnDataType } from '@/utils/common/api';
 const app = Route();
 
+interface File {
+	name: string;
+	size: number,
+	type: string,
+	response: {
+		file_sha1: string;
+	}
+}
+
+interface FileVal {
+	file: File;
+	fileList: File[];
+}
+
 function getItemByColumnJson(column: Record<string, unknown>, json: Record<string, unknown>): Record<string, unknown> | undefined {
 	if (!column.id) {
 		throw new Error('no column.id');
@@ -14,11 +28,15 @@ function getItemByColumnJson(column: Record<string, unknown>, json: Record<strin
 	const jsonKey = `col_${column.id}`;
 	const val = json[jsonKey];
 	const res: Record<string, unknown> = {};
-	if (!val) {
+	if (val === undefined) {
 		//throw new Error(`not found column.id[${jsonKey}] in json`);
 		return;
 	}
 	res[`value_${column.datatype.toString()}`] = val;
+	const fileVal = val as FileVal;
+	if (fileVal.file) {
+		console.log(fileVal);
+	}
 	return res;
 }
 
@@ -98,8 +116,15 @@ app.get('/:id', async (ctx) => {
 	});
 	const rows = (await oSql.buildSelect().getStmt().all()).results;
 	const res: Record<string, unknown> = {};
+	const dataFunc = (_input: any) => {
+		if (typeof _input === 'string' && _input.substring(0, 1) === '{') {
+			// 自动解析JSON
+			return JSON.parse(_input);
+		}
+		return _input;
+	};
 	for (const row of rows) {
-		res[`col_${row.column_id}`] = row[`value_${row.datatype}`];
+		res[`col_${row.column_id}`] = dataFunc(row[`value_${row.datatype}`]);
 	}
 	return ctx.json(res);
 });
