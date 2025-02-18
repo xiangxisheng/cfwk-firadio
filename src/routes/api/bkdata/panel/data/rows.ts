@@ -246,6 +246,7 @@ app.get('/', async (c) => {
 		values_base: 'values_base',
 	}).buildSelect().getStmt().all()).results;
 	for (const row of dataSource) {
+		// 把内容不多的基本数据通过values_base列表出来
 		const json = JSON.parse(row.values_base?.toString() || '{}');
 		for (const key in json) {
 			row[key] = json[key];

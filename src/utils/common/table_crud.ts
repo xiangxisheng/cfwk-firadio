@@ -1,6 +1,7 @@
+import type { ResJSON, ResJsonTableColumn, TableConfig } from '@/utils/common/api';
+
 import { Route } from '@/utils/route';
 import { CFD1 } from '@/utils/cfd1';
-import type { ResJSON, TableConfig } from '@/utils/common/api';
 import { delay } from '@/utils/common/api';
 
 export default function (config: TableConfig) {
@@ -13,6 +14,7 @@ export default function (config: TableConfig) {
 	});
 
 	app.post('/', async (c) => {
+		// 这是“CRUDL”中的“Create”
 		const json = await c.req.json();
 		const oCFD1 = new CFD1(c.env.DB);
 		const oSql = oCFD1.sql().from(config.name);
@@ -31,6 +33,7 @@ export default function (config: TableConfig) {
 	});
 
 	app.delete('/', async (c) => {
+		// 这是“CRUDL”中的“Delete”
 		const oCFD1 = new CFD1(c.env.DB);
 		const oSql = oCFD1.sql().from(config.name);
 		const json = await c.req.json();
@@ -50,6 +53,7 @@ export default function (config: TableConfig) {
 	});
 
 	app.get('/:id', async (c) => {
+		// 这是“CRUDL”中的“Read”
 		const id = c.req.param('id');
 		const oCFD1 = new CFD1(c.env.DB);
 		const oSql = oCFD1.sql().from(config.name);
@@ -62,6 +66,7 @@ export default function (config: TableConfig) {
 	});
 
 	app.put('/:id', async (c) => {
+		// 这是“CRUDL”中的“Update”
 		const id = c.req.param('id');
 		const json = await c.req.json();
 		const oCFD1 = new CFD1(c.env.DB);
@@ -88,19 +93,51 @@ export default function (config: TableConfig) {
 		});
 	});
 
-	app.get('/', async (c) => {
+	function deleteSqlOptionByColumns(columns: ResJsonTableColumn[]) {
+		for (const column of columns) {
+			delete column.sqlOption;
+		}
+	}
 
+	app.get('/', async (c) => {
+		// 这是“CRUDL”中的“List”
+		let pageNum = Number(c.req.query('pageNum') ?? 1);
+		let pageSize = Number(c.req.query('pageSize') ?? 10);
+		if (pageNum < 1) { pageNum = 1; }
+		if (pageSize < 1) { pageSize = 1; }
+		if (pageSize > 1000) { pageSize = 1000; }
 		const oCFD1 = new CFD1(c.env.DB);
+		// 计算[总记录数]和[总页码数]
+		const totalRecords = Number((await oCFD1.sql().from(config.name).select({ 'total': 'COUNT(*)' }).buildSelect().getStmt().first())?.total);
+		const totalPages = Math.ceil(totalRecords / pageSize);
+		if (pageNum > totalPages) { pageNum = totalPages; }
+		// 开始输出列表
 		const oSql = oCFD1.sql().from(config.name);
+		oSql.offset((pageNum - 1) * pageSize);
+		oSql.limit(pageSize);
 		const select: Record<string, string> = {};
 		for (const col of config.columns) {
 			select[col.dataIndex] = col.dataIndex;
 		}
-		const dataSource = (await oSql.select(select).buildSelect().getStmt().all()).results;
+		oSql.select(select);
+		const aWhere: Array<[string, Array<string | number>]> = [];
+		for (const col of config.columns) {
+			if (!col.sqlOption) {
+				continue;
+			}
+			const search_val = c.req.query(`${col.dataIndex}`);
+			if (search_val) {
+				aWhere.push([col.sqlOption.where, [search_val]]);
+			}
+		}
+		oSql.where(aWhere);
+		const dataSource = (await oSql.buildSelect().getStmt().all()).results;
+		deleteSqlOptionByColumns(config.columns);
 		const resJson: ResJSON = {
 			table: {
 				option: config.option,
 				columns: config.columns,
+				totalRecords,
 				dataSource,
 			},
 		};

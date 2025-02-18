@@ -35,6 +35,9 @@ const config: TableConfig = {
 		component: 'textbox',
 		rules: [{ required: true, message: '请输入[列标题]' }],
 		placeholder: '请输入[列标题]',
+		sqlOption: {
+			where: 'title=?'
+		},
 	}, {
 		title: '交互组件',
 		dataIndex: 'component',
